@@ -59,14 +59,23 @@ def test_email_gmail():
     send_email_from_gmail(WILL_EMAIL, WILL_EMAIL, SUBJECT, BODY)
 
 
-def test_cute_links(cute_post):
+def test_cute_posts(cute_post):
     """Test generating links."""
     assert cute_post.url.startswith('http')
 
 
-def test_cute_links_count():
+def test_cute_posts_count():
     """Test that number of links is at or under the limit per subreddit."""
-    assert len(list(CUTE_POSTS)) <= len(CUTE_SUBS) * LIMIT
+    assert len(CUTE_POSTS) <= len(CUTE_SUBS) * LIMIT
+
+
+def test_cute_posts_dupes():
+    """Test that number of links is at or under the limit per subreddit."""
+    from deliver_cute import dedupe_posts
+    urls = [post.url for post in CUTE_POSTS]
+    urls_set = set(urls)
+    if len(urls) > len(urls_set):
+        assert set(post.url for post in dedupe_posts(CUTE_POSTS)) == urls_set
 
 
 def test_src_pat_good(good_src_url):

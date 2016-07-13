@@ -6,7 +6,6 @@ and email them to participants.
 """
 
 # TODO
-# remove duplicates
 # link images too
 # create its own email address
 # deploy
