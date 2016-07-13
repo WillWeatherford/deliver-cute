@@ -72,15 +72,21 @@ SRC_PAT = re.compile(r'http(s)?://i\.(imgur|reddituploads|redd).*\.[a-z]{3,4}')
 
 def gather_cute_posts(subreddit_names, limit):
     """Generate image urls from top links in cute subs, sorted by score."""
-    found_already = set()
     reddit = praw.Reddit(user_agent=USER_AGENT)
     subreddits = (reddit.get_subreddit(name) for name in subreddit_names)
     all_posts = (sub.get_top_from_day(limit=limit) for sub in subreddits)
 
     for post in merge(*all_posts, key=attrgetter('score'), reverse=True):
+        print('sub: {} url: {}; score: {}'
+              ''.format(post.subreddit, post.url, post.score))
+        yield post
+
+
+def dedupe_posts(posts):
+    """Remove duplicate posts."""
+    found_already = set()
+    for post in posts:
         if post.url not in found_already:
-            print('sub: {} url: {}; score: {}'
-                  ''.format(post.subreddit, post.url, post.score))
             yield post
             found_already.add(post.url)
         else:
@@ -149,6 +155,7 @@ def send_email_from_gmail(from_addr, to_addr, subject, body):
 def main(to_addr):
     """Gather then email top cute links."""
     posts = gather_cute_posts(CUTE_SUBS, LIMIT)
+    posts = dedupe_posts(posts)
     posts = fix_image_links(posts)
     posts = htmlize_posts(posts)
     text = '<html>' + '<br>'.join(posts) + '</html>'

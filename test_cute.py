@@ -1,5 +1,7 @@
 """Test functions for deliver_cute project."""
 
+# test de-duplication
+# test htmlization
 import pytest
 import random
 from string import ascii_letters, digits
@@ -67,13 +69,13 @@ def test_cute_links_count():
     assert len(list(CUTE_POSTS)) <= len(CUTE_SUBS) * LIMIT
 
 
-def test_src_pat_positive(good_src_url):
+def test_src_pat_good(good_src_url):
     """Confirm that link regex works as expected for good urls."""
     from deliver_cute import SRC_PAT
     assert SRC_PAT.match(good_src_url) is not None
 
 
-def test_src_pat_negative(bad_src_url):
+def test_src_pat_bad(bad_src_url):
     """Confirm that link regex works as expected for bad urls."""
     from deliver_cute import SRC_PAT
     assert SRC_PAT.match(bad_src_url) is None
