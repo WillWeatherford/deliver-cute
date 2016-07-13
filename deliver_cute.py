@@ -6,6 +6,7 @@ and email them to participants.
 """
 
 # TODO
+# remove duplicates
 # link images too
 # create its own email address
 # deploy
@@ -71,13 +72,19 @@ SRC_PAT = re.compile(r'http(s)?://i\.(imgur|reddituploads|redd).*\.[a-z]{3,4}')
 
 def gather_cute_posts(subreddit_names, limit):
     """Generate image urls from top links in cute subs, sorted by score."""
+    found_already = set()
     reddit = praw.Reddit(user_agent=USER_AGENT)
     subreddits = (reddit.get_subreddit(name) for name in subreddit_names)
     all_posts = (sub.get_top_from_day(limit=limit) for sub in subreddits)
 
     for post in merge(*all_posts, key=attrgetter('score'), reverse=True):
-        print('sub: {} url: {}; score: {}'.format(post.subreddit, post.url, post.score))
-        yield post
+        if post.url not in found_already:
+            print('sub: {} url: {}; score: {}'
+                  ''.format(post.subreddit, post.url, post.score))
+            yield post
+            found_already.add(post.url)
+        else:
+            print('Omitting duplicate {}'.format(post.url))
 
 
 def fix_image_links(posts):
@@ -145,7 +152,7 @@ def main(to_addr):
     posts = fix_image_links(posts)
     posts = htmlize_posts(posts)
     text = '<html>' + '<br>'.join(posts) + '</html>'
-    send_email_from_gmail(USERNAME, to_addr, 'Cute pics', text)
+    send_email_from_gmail(USERNAME, to_addr, EMAIL_SUBJECT, text)
 
 
 if __name__ == '__main__':

@@ -14,7 +14,6 @@ SUBJECT = 'TEST EMAIL'
 BODY = '''
 <html>
 <h1>Test Header</h1>
-
 <img src="http://i.imgur.com/URw6C0c.jpg">
 </html>
 '''
@@ -24,7 +23,7 @@ DOMAIN = ('i.imgur.com/', )
 HASH = ''.join(random.choice(ascii_letters + digits) for _ in range(8))
 EXT = ('.jpg', '.gifv', '.gif', '.png', )
 
-BAD_DOMAIN = ('www.imgur.com/', 'reddit.com/', )
+BAD_DOMAIN = ('www.imgur.com/', 'reddit.com/', 'gfycat.com/')
 BAD_EXT = ('', )
 
 
@@ -36,7 +35,7 @@ def good_src_url(request):
 
 @pytest.fixture(params=product(PROTO, BAD_DOMAIN, HASH, BAD_EXT))
 def bad_src_url(request):
-    """Generate good imgur source urls."""
+    """Generate bad source urls."""
     return ''.join(request.param)
 
 
@@ -69,13 +68,13 @@ def test_cute_links_count():
 
 
 def test_src_pat_positive(good_src_url):
-    """Confirm that link regex works as expected."""
+    """Confirm that link regex works as expected for good urls."""
     from deliver_cute import SRC_PAT
     assert SRC_PAT.match(good_src_url) is not None
 
 
 def test_src_pat_negative(bad_src_url):
-    """Confirm that link regex works as expected."""
+    """Confirm that link regex works as expected for bad urls."""
     from deliver_cute import SRC_PAT
     assert SRC_PAT.match(bad_src_url) is None
 
