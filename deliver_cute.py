@@ -6,7 +6,6 @@ and email them to participants.
 """
 
 # TODO
-# filter under upvote threshold or sort all by upvotes
 # alt text from reddit post
 # link images too
 # gyfcat
@@ -21,6 +20,8 @@ import sys
 import praw
 import smtplib
 import requests
+from operator import attrgetter
+from heapq import merge
 from bs4 import BeautifulSoup
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
@@ -53,12 +54,14 @@ SRC_PAT = re.compile(r'http(s)?://i\.(imgur|reddituploads|redd).*\.[a-z]{3,4}')
 
 
 def gather_cute_links(subreddit_names, limit):
-    """Generate image urls from top links in cute subs."""
+    """Generate image urls from top links in cute subs, sorted by score."""
     reddit = praw.Reddit(user_agent=USER_AGENT)
-    for sub_name in subreddit_names:
-        subreddit = reddit.get_subreddit(sub_name)
-        for post in subreddit.get_top_from_day(limit=limit):
-            yield post.url
+    subreddits = (reddit.get_subreddit(sub_name) for sub_name in subreddit_names)
+    all_posts = (sub.get_top_from_day(limit=limit) for sub in subreddits)
+
+    for post in merge(*all_posts, key=attrgetter('score'), reverse=True):
+        print('url: {}; score: {}'.format(post.url, post.score))
+        yield post.url
 
 
 def fix_image_links(links):
