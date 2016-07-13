@@ -6,7 +6,6 @@ and email them to participants.
 """
 
 # TODO
-# alt text from reddit post
 # link images too
 # create its own email address
 # deploy
@@ -58,7 +57,7 @@ PIC_WIDTH = 400
 PIC_TEMPLATE = '''
 <p>
   <p>
-    <a src={url}>{title}</a>
+    <a href={url}>{title}</a>
   </p>
   <p>
     <img src="{url}" style="width:{width}px" alt={title}>
