@@ -8,11 +8,15 @@ and email them to participants.
 # TODO
 # alt text from reddit post
 # link images too
-# gyfcat
-# gifv
-# album link
 # create its own email address
 # deploy
+
+# currently incompatible media sources:
+#   video tag?
+#   streamable
+#   gyfcat
+#   gifv
+#   album link on imgur
 
 import os
 import re
@@ -35,6 +39,7 @@ except KeyError:
 
 USER_AGENT = 'python:deliver_cute:v1.0 (by /u/____OOOO____)'
 CUTE_SUBS = [
+    'AnimalsBeingBros',
     'AnimalsBeingConfused',
     'AnimalsBeingDerps',
     'aww',
@@ -49,26 +54,37 @@ CUTE_SUBS = [
 LIMIT = 10
 
 EMAIL_SUBJECT = 'Cute pics improved'
-
 PIC_WIDTH = 400
+PIC_TEMPLATE = '''
+<p>
+  <p>
+    <a src={url}>{title}</a>
+  </p>
+  <p>
+    <img src="{url}" style="width:{width}px" alt={title}>
+  </p>
+</p>
+'''
+
 YT_PAT = re.compile(r'.*(youtu\.be|youtube\.com).*')
 SRC_PAT = re.compile(r'http(s)?://i\.(imgur|reddituploads|redd).*\.[a-z]{3,4}')
 
 
-def gather_cute_links(subreddit_names, limit):
+def gather_cute_posts(subreddit_names, limit):
     """Generate image urls from top links in cute subs, sorted by score."""
     reddit = praw.Reddit(user_agent=USER_AGENT)
     subreddits = (reddit.get_subreddit(name) for name in subreddit_names)
     all_posts = (sub.get_top_from_day(limit=limit) for sub in subreddits)
 
     for post in merge(*all_posts, key=attrgetter('score'), reverse=True):
-        print('url: {}; score: {}'.format(post.url, post.score))
-        yield post.url
+        print('sub: {} url: {}; score: {}'.format(post.subreddit, post.url, post.score))
+        yield post
 
 
-def fix_image_links(links):
+def fix_image_links(posts):
     """Make sure that each imgur link is directly to the content."""
-    for link in links:
+    for post in posts:
+        link = post.url
         if YT_PAT.match(link):
             print('discarding {} as youtube link'.format(link))
             continue
@@ -78,35 +94,34 @@ def fix_image_links(links):
             continue
 
         if not SRC_PAT.match(link):
-            link = find_source_link(link)
+            try:
+                link = find_source_link(link)
+            except AttributeError as e:
+                print('Error trying to get img src at {}: {}'.format(link, e))
+                continue
         link = re.sub(r'^//', 'http://', link)
-        yield link
+        post.url = link
+        yield post
 
 
 def find_source_link(link):
     """Scrape the direct source link from imgur or other website."""
+    # Currently only works for imgur
     response = requests.get(link)
     html = BeautifulSoup(response.text, 'html.parser')
-    try:
-        div = html.find('div', class_='post-image')
-    except AttributeError as e:
-        print('Error trying to get image div at {}: {}'.format(link, e))
-    try:
-        img = div.find('img')
-        link = img.attrs['src']
-    except AttributeError as e:
-        print('Error trying to get img src at {}: {}'.format(link, e))
-    return link
+    div = html.find('div', class_='post-image')
+    img = div.find('img')
+    return img.attrs['src']
 
 
-def htmlize_image_links(links):
+def htmlize_posts(posts):
     """Generate each link as an html-ized image element."""
-    for link in links:
-        yield (
-            '<a src={}>'
-            '<img src="{}" style="width:{}px">'
-            '</a>'
-        ).format(link, link, PIC_WIDTH)
+    for post in posts:
+        yield PIC_TEMPLATE.format(
+            url=post.url,
+            title=post.title,
+            width=PIC_WIDTH
+        )
 
 
 def send_email_from_gmail(from_addr, to_addr, subject, body):
@@ -127,10 +142,10 @@ def send_email_from_gmail(from_addr, to_addr, subject, body):
 
 def main(to_addr):
     """Gather then email top cute links."""
-    links = gather_cute_links(CUTE_SUBS, LIMIT)
-    links = fix_image_links(links)
-    links = htmlize_image_links(links)
-    text = '<html>' + '<br>'.join(links) + '</html>'
+    posts = gather_cute_posts(CUTE_SUBS, LIMIT)
+    posts = fix_image_links(posts)
+    posts = htmlize_posts(posts)
+    text = '<html>' + '<br>'.join(posts) + '</html>'
     send_email_from_gmail(USERNAME, to_addr, 'Cute pics', text)
 
 
