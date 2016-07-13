@@ -6,8 +6,8 @@ from string import ascii_letters, digits
 from itertools import product
 from deliver_cute import gather_cute_posts, fix_image_links, CUTE_SUBS, LIMIT
 
-CUTE_POSTS = gather_cute_posts(CUTE_SUBS, LIMIT)
-FIXED_LINKS = fix_image_links(CUTE_POSTS)
+CUTE_POSTS = list(gather_cute_posts(CUTE_SUBS, LIMIT))
+FIXED_LINKS = list(fix_image_links(CUTE_POSTS))
 
 WILL_EMAIL = 'weatherford.william@gmail.com'
 SUBJECT = 'TEST EMAIL'
@@ -25,7 +25,6 @@ HASH = ''.join(random.choice(ascii_letters + digits) for _ in range(8))
 EXT = ('.jpg', '.gifv', '.gif', '.png', )
 
 BAD_DOMAIN = ('www.imgur.com/', 'reddit.com/', )
-BAD_HASH = ''.join(random.choice(ascii_letters + digits) for _ in range(8))
 BAD_EXT = ('', )
 
 
@@ -35,7 +34,7 @@ def good_src_url(request):
     return ''.join(request.param)
 
 
-@pytest.fixture(params=product(PROTO, BAD_DOMAIN, BAD_HASH, BAD_EXT))
+@pytest.fixture(params=product(PROTO, BAD_DOMAIN, HASH, BAD_EXT))
 def bad_src_url(request):
     """Generate good imgur source urls."""
     return ''.join(request.param)
@@ -84,4 +83,4 @@ def test_src_pat_negative(bad_src_url):
 def test_cute_links_source(fixed_link):
     """Confirm that links fixed by source fixer match the expected pattern."""
     from deliver_cute import SRC_PAT
-    assert SRC_PAT.match(fixed_link)
+    assert SRC_PAT.match(fixed_link.url) is not None
