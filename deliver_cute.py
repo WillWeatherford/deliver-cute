@@ -46,9 +46,11 @@ CUTE_SUBS = [
     'kittengifs',
     'StartledCats',
 ]
-
 LIMIT = 10
-PIC_WIDTH = 300
+
+EMAIL_SUBJECT = 'Cute pics improved'
+
+PIC_WIDTH = 400
 YT_PAT = re.compile(r'.*(youtu\.be|youtube\.com).*')
 SRC_PAT = re.compile(r'http(s)?://i\.(imgur|reddituploads|redd).*\.[a-z]{3,4}')
 
@@ -56,7 +58,7 @@ SRC_PAT = re.compile(r'http(s)?://i\.(imgur|reddituploads|redd).*\.[a-z]{3,4}')
 def gather_cute_links(subreddit_names, limit):
     """Generate image urls from top links in cute subs, sorted by score."""
     reddit = praw.Reddit(user_agent=USER_AGENT)
-    subreddits = (reddit.get_subreddit(sub_name) for sub_name in subreddit_names)
+    subreddits = (reddit.get_subreddit(name) for name in subreddit_names)
     all_posts = (sub.get_top_from_day(limit=limit) for sub in subreddits)
 
     for post in merge(*all_posts, key=attrgetter('score'), reverse=True):
@@ -100,7 +102,11 @@ def find_source_link(link):
 def htmlize_image_links(links):
     """Generate each link as an html-ized image element."""
     for link in links:
-        yield '<p>{}</p><img src="{}" style="width:{}px">'.format(link, link, PIC_WIDTH)
+        yield (
+            '<a src={}>'
+            '<img src="{}" style="width:{}px">'
+            '</a>'
+        ).format(link, link, PIC_WIDTH)
 
 
 def send_email_from_gmail(from_addr, to_addr, subject, body):
