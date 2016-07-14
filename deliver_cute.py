@@ -6,7 +6,7 @@ and email them to participants.
 """
 
 # TODO
-# link images too
+# Escape HTML - apostrophe in text fucks it up.
 # create its own email address
 # deploy
 
