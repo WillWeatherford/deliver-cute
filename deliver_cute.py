@@ -6,7 +6,6 @@ and email them to participants.
 """
 
 # TODO
-# Escape HTML - apostrophe in text fucks it up.
 # Send date in email subject
 # create its own email address
 # deploy
@@ -21,6 +20,7 @@ and email them to participants.
 import os
 import re
 import sys
+import html
 import praw
 import smtplib
 import requests
@@ -130,8 +130,8 @@ def htmlize_posts(posts):
     """Generate each link as an html-ized image element."""
     for post in posts:
         yield PIC_TEMPLATE.format(
-            url=post.url,
-            title=post.title,
+            url=html.escape(post.url),
+            title=html.escape(post.title),
             width=PIC_WIDTH
         )
 

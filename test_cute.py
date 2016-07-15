@@ -1,7 +1,5 @@
 """Test functions for deliver_cute project."""
 
-# test de-duplication
-# test htmlization
 import pytest
 import random
 from string import ascii_letters, digits
@@ -16,6 +14,7 @@ SUBJECT = 'TEST EMAIL'
 BODY = '''
 <html>
 <h1>Test Header</h1>
+<p>can't not apostrophe</p>
 <img src="http://i.imgur.com/URw6C0c.jpg">
 </html>
 '''
@@ -57,6 +56,20 @@ def test_email_gmail():
     """Test sending an email."""
     from deliver_cute import send_email_from_gmail
     send_email_from_gmail(WILL_EMAIL, WILL_EMAIL, SUBJECT, BODY)
+
+
+def test_moonmoon():
+    """Test html escaping problems."""
+    import praw
+    from deliver_cute import (
+        send_email_from_gmail,
+        htmlize_posts,
+        USER_AGENT,
+    )
+    reddit = praw.Reddit(user_agent=USER_AGENT)
+    moonmoon_post = reddit.get_submission(submission_id='4spncq')
+    body = '<html>' + next(htmlize_posts((moonmoon_post, ))) + '</html>'
+    send_email_from_gmail(WILL_EMAIL, WILL_EMAIL, 'ESCAPE TEST', body)
 
 
 def test_cute_posts(cute_post):
