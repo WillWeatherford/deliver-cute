@@ -7,6 +7,7 @@ and email them to participants.
 
 # TODO
 # Escape HTML - apostrophe in text fucks it up.
+# Send date in email subject
 # create its own email address
 # deploy
 
@@ -52,7 +53,7 @@ CUTE_SUBS = [
 ]
 LIMIT = 10
 
-EMAIL_SUBJECT = 'Cute pics improved'
+EMAIL_SUBJECT = 'Cute pics'
 PIC_WIDTH = 400
 PIC_TEMPLATE = '''
 <p>
