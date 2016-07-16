@@ -6,10 +6,11 @@ and email them to participants.
 """
 
 # TODO
-# send email to list of emails
 # Django
+#   one page only
 #   input field for email and preferences (update if already in)
 #   save emails plus preferences in DB
+#   include checkboxes of different subreddits
 # deploy
 # remove yesterday's duplicates
 
