@@ -54,7 +54,7 @@ CUTE_SUBS = [
 ]
 LIMIT = 10
 
-EMAIL_SUBJECT = 'Cute pics'
+EMAIL_SUBJECT_TEMPLATE = 'Cute Pics for {}'
 PIC_WIDTH = 400
 PIC_TEMPLATE = '''
 <p>
@@ -137,6 +137,19 @@ def htmlize_posts(posts):
         )
 
 
+def get_email_subject():
+    today = date.today()
+    day_name = calendar.day_name[today.weekday()]
+    month_name = calendar.month_name[today.month]
+    date_str = '{d}, {m} {i} {y}'.format(
+        d=day_name,
+        m=month_name,
+        i=date.day,
+        y=date.year,
+    )
+    return EMAIL_SUBJECT_TEMPLATE.format(date_str)
+
+
 def send_email_from_gmail(from_addr, to_addr, subject, body):
     """Send an email using gmail's smtp server."""
     msg = MIMEMultipart('alternative')
@@ -160,7 +173,8 @@ def main(to_addr):
     posts = fix_image_links(posts)
     posts = htmlize_posts(posts)
     text = '<html>' + '<br>'.join(posts) + '</html>'
-    send_email_from_gmail(USERNAME, to_addr, EMAIL_SUBJECT, text)
+    subject = get_email_subject()
+    send_email_from_gmail(USERNAME, to_addr, subject, text)
 
 
 if __name__ == '__main__':
