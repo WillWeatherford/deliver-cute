@@ -168,21 +168,23 @@ def get_to_addrs():
     """Collect the email addresses of recipients."""
     with open(TO_ADDRS_FILENAME, 'r') as fp:
         return fp.read().splitlines()
+    return []
 
 
 def send_email_from_gmail(from_addr, from_name, to_addrs, subject, body):
     """Send an email using gmail's smtp server."""
-    html = MIMEText(body, 'html')
     s = smtplib.SMTP('smtp.gmail.com', 587)
     s.ehlo()
     s.starttls()
     s.login(USERNAME, PASSWORD)
+
+    html = MIMEText(body, 'html')
+    msg = MIMEMultipart('alternative')
+    msg.attach(html)
+    msg['Subject'] = subject
+    msg['From'] = from_name
     for to_addr in to_addrs:
-        msg = MIMEMultipart('alternative')
-        msg['Subject'] = subject
-        msg['From'] = from_name
         msg['To'] = to_addr
-        msg.attach(html)
         s.sendmail(from_addr, to_addr, msg.as_string())
     s.quit()
 
@@ -192,9 +194,9 @@ def main(to_addr):
     posts = gather_cute_posts(CUTE_SUBS, LIMIT)
     posts = dedupe_posts(posts)
     posts = fix_image_links(posts)
-    body = get_email_body(posts)
-    subject = get_email_subject()
     to_addrs = get_to_addrs()
+    subject = get_email_subject()
+    body = get_email_body(posts)
     send_email_from_gmail(USERNAME, FROM_NAME, to_addrs, subject, body)
 
 
