@@ -139,7 +139,7 @@ def send_email_from_gmail(from_addr, to_addr, subject, body):
     """Send an email using gmail's smtp server."""
     msg = MIMEMultipart('alternative')
     msg['Subject'] = subject
-    msg['From'] = from_addr
+    msg['From'] = 'Deliver Cute'
     msg['To'] = to_addr
     html = MIMEText(body, 'html')
     msg.attach(html)
