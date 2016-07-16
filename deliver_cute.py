@@ -6,8 +6,12 @@ and email them to participants.
 """
 
 # TODO
-# Send date in email subject
+# send email to list of emails
+# Django
+#   input field for email and preferences (update if already in)
+#   save emails plus preferences in DB
 # deploy
+# remove yesterday's duplicates
 
 # currently incompatible media sources:
 #   video tag?
@@ -55,6 +59,7 @@ CUTE_SUBS = [
 LIMIT = 10
 
 EMAIL_SUBJECT_TEMPLATE = 'Cute Pics for {}'
+FROM_NAME = 'Deliver Cute'
 PIC_WIDTH = 400
 PIC_TEMPLATE = '''
 <p>
@@ -69,6 +74,8 @@ PIC_TEMPLATE = '''
 
 YT_PAT = re.compile(r'.*(youtu\.be|youtube\.com).*')
 SRC_PAT = re.compile(r'http(s)?://i\.(imgur|reddituploads|redd).*\.[a-z]{3,4}')
+
+TO_ADDRS_FILENAME = 'to_addrs.txt'
 
 
 def gather_cute_posts(subreddit_names, limit):
@@ -157,19 +164,26 @@ def htmlize_posts(posts):
         )
 
 
-def send_email_from_gmail(from_addr, to_addr, subject, body):
+def get_to_addrs():
+    """Collect the email addresses of recipients."""
+    with open(TO_ADDRS_FILENAME, 'r') as fp:
+        return fp.read().splitlines()
+
+
+def send_email_from_gmail(from_addr, from_name, to_addrs, subject, body):
     """Send an email using gmail's smtp server."""
-    msg = MIMEMultipart('alternative')
-    msg['Subject'] = subject
-    msg['From'] = 'Deliver Cute'
-    msg['To'] = to_addr
     html = MIMEText(body, 'html')
-    msg.attach(html)
     s = smtplib.SMTP('smtp.gmail.com', 587)
     s.ehlo()
     s.starttls()
     s.login(USERNAME, PASSWORD)
-    s.sendmail(from_addr, to_addr, msg.as_string())
+    for to_addr in to_addrs:
+        msg = MIMEMultipart('alternative')
+        msg['Subject'] = subject
+        msg['From'] = from_name
+        msg['To'] = to_addr
+        msg.attach(html)
+        s.sendmail(from_addr, to_addr, msg.as_string())
     s.quit()
 
 
@@ -180,7 +194,8 @@ def main(to_addr):
     posts = fix_image_links(posts)
     body = get_email_body(posts)
     subject = get_email_subject()
-    send_email_from_gmail(USERNAME, to_addr, subject, body)
+    to_addrs = get_to_addrs()
+    send_email_from_gmail(USERNAME, FROM_NAME, to_addrs, subject, body)
 
 
 if __name__ == '__main__':
