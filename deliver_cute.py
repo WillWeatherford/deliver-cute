@@ -127,16 +127,6 @@ def find_source_link(link):
     return img.attrs['src']
 
 
-def htmlize_posts(posts):
-    """Generate each link as an html-ized image element."""
-    for post in posts:
-        yield PIC_TEMPLATE.format(
-            url=html.escape(post.url),
-            title=html.escape(post.title),
-            width=PIC_WIDTH
-        )
-
-
 def get_email_subject():
     """Format today's date into the email subject."""
     today = date.today()
@@ -149,6 +139,22 @@ def get_email_subject():
         y=today.year,
     )
     return EMAIL_SUBJECT_TEMPLATE.format(today_date_str)
+
+
+def get_email_body(posts):
+    """Format posts into HTML."""
+    posts = htmlize_posts(posts)
+    return '<html>{}</html>'.format('<br>'.join(posts))
+
+
+def htmlize_posts(posts):
+    """Generate each link as an html-ized image element."""
+    for post in posts:
+        yield PIC_TEMPLATE.format(
+            url=html.escape(post.url),
+            title=html.escape(post.title),
+            width=PIC_WIDTH
+        )
 
 
 def send_email_from_gmail(from_addr, to_addr, subject, body):
@@ -172,10 +178,9 @@ def main(to_addr):
     posts = gather_cute_posts(CUTE_SUBS, LIMIT)
     posts = dedupe_posts(posts)
     posts = fix_image_links(posts)
-    posts = htmlize_posts(posts)
-    text = '<html>' + '<br>'.join(posts) + '</html>'
+    body = get_email_body(posts)
     subject = get_email_subject()
-    send_email_from_gmail(USERNAME, to_addr, subject, text)
+    send_email_from_gmail(USERNAME, to_addr, subject, body)
 
 
 if __name__ == '__main__':
