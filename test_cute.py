@@ -6,6 +6,9 @@ from string import ascii_letters, digits
 from itertools import product
 from deliver_cute import gather_cute_posts, fix_image_links, CUTE_SUBS, LIMIT
 
+# TODO
+# test htmlization
+
 CUTE_POSTS = list(gather_cute_posts(CUTE_SUBS, LIMIT))
 FIXED_LINKS = list(fix_image_links(CUTE_POSTS))
 
@@ -55,7 +58,7 @@ def fixed_link(request):
 def test_email_gmail():
     """Test sending an email."""
     from deliver_cute import send_email_from_gmail
-    send_email_from_gmail(WILL_EMAIL, WILL_EMAIL, SUBJECT, BODY)
+    send_email_from_gmail(WILL_EMAIL, WILL_EMAIL, [WILL_EMAIL], SUBJECT, BODY)
 
 
 def test_moonmoon():
@@ -69,7 +72,7 @@ def test_moonmoon():
     reddit = praw.Reddit(user_agent=USER_AGENT)
     moonmoon_post = reddit.get_submission(submission_id='4spncq')
     body = '<html>' + next(htmlize_posts((moonmoon_post, ))) + '</html>'
-    send_email_from_gmail(WILL_EMAIL, WILL_EMAIL, 'ESCAPE TEST', body)
+    send_email_from_gmail(WILL_EMAIL, WILL_EMAIL, [WILL_EMAIL], 'ESCAPE TEST', body)
 
 
 def test_cute_posts(cute_post):
@@ -85,10 +88,11 @@ def test_cute_posts_count():
 def test_cute_posts_dupes():
     """Test that number of links is at or under the limit per subreddit."""
     from deliver_cute import dedupe_posts
-    urls = [post.url for post in CUTE_POSTS]
-    urls_set = set(urls)
-    if len(urls) > len(urls_set):
-        assert set(post.url for post in dedupe_posts(CUTE_POSTS)) == urls_set
+    duplicated_posts = CUTE_POSTS + CUTE_POSTS
+    deduplicated_urls = [post.url for post in dedupe_posts(duplicated_posts)]
+    deduplicated_urls = list(sorted(deduplicated_urls))
+    urls = list(sorted(set(post.url for post in CUTE_POSTS)))
+    assert deduplicated_urls == urls
 
 
 def test_src_pat_good(good_src_url):

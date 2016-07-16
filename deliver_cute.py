@@ -202,4 +202,8 @@ def main(to_addr):
 
 
 if __name__ == '__main__':
-    main(sys.argv[1])
+    try:
+        to_addr = sys.argv[1]
+    except IndexError:
+        to_addr = USERNAME
+    main(to_addr)
