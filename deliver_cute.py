@@ -7,7 +7,6 @@ and email them to participants.
 
 # TODO
 # Send date in email subject
-# create its own email address
 # deploy
 
 # currently incompatible media sources:
