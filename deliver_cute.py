@@ -138,11 +138,17 @@ def htmlize_posts(posts):
 
 
 def get_email_subject():
+    """Format today's date into the email subject."""
     today = date.today()
     day_name = calendar.day_name[today.weekday()]
     month_name = calendar.month_name[today.month]
-    date_str = '{}, {} {} {}'.format(day_name, month_name, date.day, date.year)
-    return EMAIL_SUBJECT_TEMPLATE.format(date_str)
+    today_date_str = '{d}, {m} {i} {y}'.format(
+        d=day_name,
+        m=month_name,
+        i=today.day,
+        y=today.year,
+    )
+    return EMAIL_SUBJECT_TEMPLATE.format(today_date_str)
 
 
 def send_email_from_gmail(from_addr, to_addr, subject, body):
