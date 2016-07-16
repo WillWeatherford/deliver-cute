@@ -23,9 +23,9 @@ import html
 import praw
 import smtplib
 import requests
-from operator import attrgetter
 from heapq import merge
 from bs4 import BeautifulSoup
+from operator import attrgetter
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 
