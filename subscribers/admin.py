@@ -1,3 +1,6 @@
-from django.contrib import admin
+"""Register subscribers models to be available on admin page."""
 
-# Register your models here.
+from django.contrib import admin
+from .models import Subscriber
+
+admin.site.register(Subscriber)

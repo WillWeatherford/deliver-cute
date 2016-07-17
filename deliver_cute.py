@@ -5,26 +5,6 @@ This program requests the top links from various subreddits of cute animals
 and email them to participants.
 """
 
-# TODO
-# Django
-#   one page only
-#   input field for email and preferences (update if already in)
-#   save emails plus preferences in DB
-#   include checkboxes of different subreddits
-# deploy
-# remove yesterday's duplicates
-
-# Cron every hour on the hour
-# query db for all users where their hour preference = current hour
-# send to all those users email.
-
-# currently incompatible media sources:
-#   video tag?
-#   streamable
-#   gyfcat
-#   gifv
-#   album link on imgur
-
 import os
 import re
 import sys
@@ -40,6 +20,11 @@ from operator import attrgetter
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 
+os.environ.setdefault("DJANGO_SETTINGS_MODULE", "delivercute.settings")
+import django
+django.setup()
+# from django.conf import settings
+# settings.configure()
 from subscribers.models import Subscriber
 
 try:
@@ -177,8 +162,10 @@ def get_to_addrs():
     #     return fp.read().splitlines()
 
     hour = datetime.now().hour
-    subs = Subscriber.objects(send_hour=hour)
-    return [sub.email for sub in subs]
+    subs = Subscriber.objects.filter(send_hour=hour)
+    for sub in subs:
+        print(sub.email)
+        yield sub.email
 
 
 def send_email_from_gmail(from_addr, from_name, to_addrs, subject, body):
