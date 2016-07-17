@@ -14,9 +14,10 @@ import smtplib
 import calendar
 import requests
 from heapq import merge
-from datetime import date, datetime
+from pytz import timezone
 from bs4 import BeautifulSoup
 from operator import attrgetter
+from datetime import date, datetime
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 
@@ -161,7 +162,8 @@ def get_to_addrs():
     # with open(TO_ADDRS_FILENAME, 'r') as fp:
     #     return fp.read().splitlines()
 
-    hour = datetime.now().hour
+    now = datetime.now(tz=timezone('US/Pacific'))
+    hour = now.hour
     subs = Subscriber.objects.filter(send_hour=hour)
     for sub in subs:
         print(sub.email)
