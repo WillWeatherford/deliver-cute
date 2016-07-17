@@ -4,7 +4,6 @@ Cuteness Delivery System.
 This program requests the top links from various subreddits of cute animals
 and email them to participants.
 """
-os.environ.setdefault("DJANGO_SETTINGS_MODULE", "delivercute.settings")
 
 import os
 import re
@@ -22,9 +21,9 @@ from datetime import date, datetime
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 import django
+
+os.environ.setdefault("DJANGO_SETTINGS_MODULE", "delivercute.settings")
 django.setup()
-# from django.conf import settings
-# settings.configure()
 from subscribers.models import Subscriber
 
 try:
@@ -161,6 +160,8 @@ def get_to_addrs():
     now = datetime.now(tz=timezone('US/Pacific'))
     hour = now.hour
     subs = Subscriber.objects.filter(send_hour=hour)
+    if not subs:
+        raise StopIteration
     for sub in subs:
         print(sub.email)
         yield sub.email
@@ -186,10 +187,13 @@ def send_email_from_gmail(from_addr, from_name, to_addrs, subject, body):
 
 def main(to_addr):
     """Gather then email top cute links."""
+    try:
+        to_addrs = get_to_addrs()
+    except StopIteration:
+        return
     posts = gather_cute_posts(CUTE_SUBS, LIMIT)
     posts = dedupe_posts(posts)
     posts = fix_image_links(posts)
-    to_addrs = get_to_addrs()
     subject = get_email_subject()
     body = get_email_body(posts)
     send_email_from_gmail(USERNAME, FROM_NAME, to_addrs, subject, body)
