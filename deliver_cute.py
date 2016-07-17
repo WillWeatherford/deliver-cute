@@ -14,6 +14,10 @@ and email them to participants.
 # deploy
 # remove yesterday's duplicates
 
+# Cron every hour on the hour
+# query db for all users where their hour preference = current hour
+# send to all those users email.
+
 # currently incompatible media sources:
 #   video tag?
 #   streamable
@@ -30,11 +34,13 @@ import smtplib
 import calendar
 import requests
 from heapq import merge
-from datetime import date
+from datetime import date, datetime
 from bs4 import BeautifulSoup
 from operator import attrgetter
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
+
+from subscribers.models import Subscriber
 
 try:
     USERNAME = os.environ['USERNAME']
@@ -167,9 +173,12 @@ def htmlize_posts(posts):
 
 def get_to_addrs():
     """Collect the email addresses of recipients."""
-    with open(TO_ADDRS_FILENAME, 'r') as fp:
-        return fp.read().splitlines()
-    return []
+    # with open(TO_ADDRS_FILENAME, 'r') as fp:
+    #     return fp.read().splitlines()
+
+    hour = datetime.now().hour
+    subs = Subscriber.objects(send_hour=hour)
+    return [sub.email for sub in subs]
 
 
 def send_email_from_gmail(from_addr, from_name, to_addrs, subject, body):
