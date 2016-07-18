@@ -15,6 +15,7 @@ import calendar
 import requests
 from heapq import merge
 from pytz import timezone
+from itertools import chain
 from bs4 import BeautifulSoup
 from operator import attrgetter
 from datetime import date, datetime
@@ -66,6 +67,15 @@ PIC_TEMPLATE = '''
 
 YT_PAT = re.compile(r'.*(youtu\.be|youtube\.com).*')
 SRC_PAT = re.compile(r'http(s)?://i\.(imgur|reddituploads|redd).*\.[a-z]{3,4}')
+
+
+def is_gen_empty(gen):
+    """Simple way to check if a generator is empty."""
+    try:
+        first = next(gen)
+    except StopIteration:
+        return True, gen
+    return False, chain([first], gen)
 
 
 def gather_cute_posts(subreddit_names, limit):
@@ -161,10 +171,7 @@ def htmlize_posts(posts):
 def get_to_addrs():
     """Collect the email addresses of recipients."""
     now = datetime.now(tz=timezone('US/Pacific'))
-    hour = now.hour
-    subs = Subscriber.objects.filter(send_hour=hour)
-    if not subs:
-        raise ValueError
+    subs = Subscriber.objects.filter(send_hour=now.hour)
     for sub in subs:
         print(sub.email)
         yield sub.email
@@ -190,9 +197,11 @@ def send_email_from_gmail(from_addr, from_name, to_addrs, subject, body):
 
 def main(to_addr):
     """Gather then email top cute links."""
-    try:
-        to_addrs = get_to_addrs()
-    except ValueError:
+    to_addrs = get_to_addrs()
+    no_subscribers, to_addrs = is_gen_empty(to_addrs)
+    if no_subscribers:
+        now = datetime.now(tz=timezone('US/Pacific'))
+        print('No subscribers want cute delivered at {}'.format(now.hour))
         return
     posts = gather_cute_posts(CUTE_SUBS, LIMIT)
     posts = dedupe_posts(posts)
