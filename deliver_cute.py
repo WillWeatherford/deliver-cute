@@ -66,8 +66,6 @@ PIC_TEMPLATE = '''
 YT_PAT = re.compile(r'.*(youtu\.be|youtube\.com).*')
 SRC_PAT = re.compile(r'http(s)?://i\.(imgur|reddituploads|redd).*\.[a-z]{3,4}')
 
-TO_ADDRS_FILENAME = 'to_addrs.txt'
-
 
 def gather_cute_posts(subreddit_names, limit):
     """Generate image urls from top links in cute subs, sorted by score."""
