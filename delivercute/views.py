@@ -1,15 +1,20 @@
+"""Views for Deliver Cute website."""
+
 from subscribers.models import Subscriber
 from django.views.generic import CreateView
 from django.http import HttpResponseRedirect
 
 
 class Main(CreateView):
+    """Main page input form to create or update subscriber information."""
+
     template_name = 'main.html'
     model = Subscriber
     fields = ['email', 'send_hour']
     success_url = '/'
 
     def form_valid(self, form):
+        """Create new Subscriber instance or update if already in database."""
         data = form.cleaned_data
         instance, created = Subscriber.objects.update_or_create(
             email=data.get('email', ''),
