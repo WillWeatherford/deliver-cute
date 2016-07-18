@@ -161,7 +161,7 @@ def get_to_addrs():
     hour = now.hour
     subs = Subscriber.objects.filter(send_hour=hour)
     if not subs:
-        raise StopIteration
+        raise ValueError
     for sub in subs:
         print(sub.email)
         yield sub.email
@@ -189,7 +189,7 @@ def main(to_addr):
     """Gather then email top cute links."""
     try:
         to_addrs = get_to_addrs()
-    except StopIteration:
+    except ValueError:
         return
     posts = gather_cute_posts(CUTE_SUBS, LIMIT)
     posts = dedupe_posts(posts)
