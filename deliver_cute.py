@@ -55,7 +55,8 @@ PIC_WIDTH = 400
 PIC_TEMPLATE = '''
 <p>
   <p>
-    <a href={url}>{title}</a>
+    <a href={permalink}>{title}</a>
+    from <a href={subreddit_url}>{subreddit_name}</a>
   </p>
   <p>
     <img src="{url}" style="width:{width}px" alt={title}>
@@ -146,10 +147,14 @@ def get_email_body(posts):
 def htmlize_posts(posts):
     """Generate each link as an html-ized image element."""
     for post in posts:
+        subreddit = post.subreddit.display_name
         yield PIC_TEMPLATE.format(
+            permalink=html.escape(post.permalink),
             url=html.escape(post.url),
             title=html.escape(post.title),
-            width=PIC_WIDTH
+            subreddit_name=html.escape('/r/' + subreddit),
+            subreddit_url=html.escape('https://www.reddit.com/r/' + subreddit),
+            width=PIC_WIDTH,
         )
 
 
