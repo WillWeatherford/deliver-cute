@@ -5,22 +5,6 @@ This program requests the top links from various subreddits of cute animals
 and email them to participants.
 """
 
-# TODO
-# Django
-#   one page only
-#   input field for email and preferences (update if already in)
-#   save emails plus preferences in DB
-#   include checkboxes of different subreddits
-# deploy
-# remove yesterday's duplicates
-
-# currently incompatible media sources:
-#   video tag?
-#   streamable
-#   gyfcat
-#   gifv
-#   album link on imgur
-
 import os
 import re
 import sys
@@ -30,11 +14,18 @@ import smtplib
 import calendar
 import requests
 from heapq import merge
-from datetime import date
+from pytz import timezone
+from itertools import chain
 from bs4 import BeautifulSoup
 from operator import attrgetter
+from datetime import date, datetime
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
+import django
+
+os.environ.setdefault("DJANGO_SETTINGS_MODULE", "delivercute.settings")
+django.setup()
+from subscribers.models import Subscriber
 
 try:
     USERNAME = os.environ['USERNAME']
@@ -65,7 +56,8 @@ PIC_WIDTH = 400
 PIC_TEMPLATE = '''
 <p>
   <p>
-    <a href={url}>{title}</a>
+    <a href={permalink}>{title}</a>
+    from <a href={subreddit_url}>{subreddit_name}</a>
   </p>
   <p>
     <img src="{url}" style="width:{width}px" alt={title}>
@@ -76,7 +68,14 @@ PIC_TEMPLATE = '''
 YT_PAT = re.compile(r'.*(youtu\.be|youtube\.com).*')
 SRC_PAT = re.compile(r'http(s)?://i\.(imgur|reddituploads|redd).*\.[a-z]{3,4}')
 
-TO_ADDRS_FILENAME = 'to_addrs.txt'
+
+def is_gen_empty(gen):
+    """Simple way to check if a generator is empty."""
+    try:
+        first = next(gen)
+    except StopIteration:
+        return True, gen
+    return False, chain([first], gen)
 
 
 def gather_cute_posts(subreddit_names, limit):
@@ -158,26 +157,32 @@ def get_email_body(posts):
 def htmlize_posts(posts):
     """Generate each link as an html-ized image element."""
     for post in posts:
+        subreddit = post.subreddit.display_name
         yield PIC_TEMPLATE.format(
+            permalink=html.escape(post.permalink),
             url=html.escape(post.url),
             title=html.escape(post.title),
-            width=PIC_WIDTH
+            subreddit_name=html.escape('/r/' + subreddit),
+            subreddit_url=html.escape('https://www.reddit.com/r/' + subreddit),
+            width=PIC_WIDTH,
         )
 
 
 def get_to_addrs():
     """Collect the email addresses of recipients."""
-    with open(TO_ADDRS_FILENAME, 'r') as fp:
-        return fp.read().splitlines()
-    return []
+    now = datetime.now(tz=timezone('US/Pacific'))
+    subscribers = Subscriber.objects.filter(send_hour=now.hour)
+    for subscriber in subscribers:
+        print(subscriber.email)
+        yield subscriber.email
 
 
 def send_email_from_gmail(from_addr, from_name, to_addrs, subject, body):
     """Send an email using gmail's smtp server."""
-    s = smtplib.SMTP('smtp.gmail.com', 587)
-    s.ehlo()
-    s.starttls()
-    s.login(USERNAME, PASSWORD)
+    server = smtplib.SMTP('smtp.gmail.com', 587)
+    server.ehlo()
+    server.starttls()
+    server.login(USERNAME, PASSWORD)
 
     html = MIMEText(body, 'html')
     msg = MIMEMultipart('alternative')
@@ -186,16 +191,21 @@ def send_email_from_gmail(from_addr, from_name, to_addrs, subject, body):
     msg['From'] = from_name
     for to_addr in to_addrs:
         msg['To'] = to_addr
-        s.sendmail(from_addr, to_addr, msg.as_string())
-    s.quit()
+        server.sendmail(from_addr, to_addr, msg.as_string())
+    server.quit()
 
 
 def main(to_addr):
     """Gather then email top cute links."""
+    to_addrs = get_to_addrs()
+    no_subscribers, to_addrs = is_gen_empty(to_addrs)
+    if no_subscribers:
+        now = datetime.now(tz=timezone('US/Pacific'))
+        print('No subscribers want cute delivered at {}'.format(now.hour))
+        return
     posts = gather_cute_posts(CUTE_SUBS, LIMIT)
     posts = dedupe_posts(posts)
     posts = fix_image_links(posts)
-    to_addrs = get_to_addrs()
     subject = get_email_subject()
     body = get_email_body(posts)
     send_email_from_gmail(USERNAME, FROM_NAME, to_addrs, subject, body)

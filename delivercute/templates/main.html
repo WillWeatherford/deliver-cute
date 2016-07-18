@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Cuteness Delivered to your Inbox</title>
+</head>
+<body>
+
+<p>
+    Home page.
+</p>
+
+<form method="post" action="." enctype="multipart/form-data">
+  {% csrf_token %}
+  <table>
+    {{form.as_table}}
+   </table>
+   <input type="submit" value="Save">
+</form>
+
+</body>
+</html>
