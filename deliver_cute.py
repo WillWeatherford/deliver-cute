@@ -171,18 +171,18 @@ def htmlize_posts(posts):
 def get_to_addrs():
     """Collect the email addresses of recipients."""
     now = datetime.now(tz=timezone('US/Pacific'))
-    subs = Subscriber.objects.filter(send_hour=now.hour)
-    for sub in subs:
-        print(sub.email)
-        yield sub.email
+    subscribers = Subscriber.objects.filter(send_hour=now.hour)
+    for subscriber in subscribers:
+        print(subscriber.email)
+        yield subscriber.email
 
 
 def send_email_from_gmail(from_addr, from_name, to_addrs, subject, body):
     """Send an email using gmail's smtp server."""
-    s = smtplib.SMTP('smtp.gmail.com', 587)
-    s.ehlo()
-    s.starttls()
-    s.login(USERNAME, PASSWORD)
+    server = smtplib.SMTP('smtp.gmail.com', 587)
+    server.ehlo()
+    server.starttls()
+    server.login(USERNAME, PASSWORD)
 
     html = MIMEText(body, 'html')
     msg = MIMEMultipart('alternative')
@@ -191,8 +191,8 @@ def send_email_from_gmail(from_addr, from_name, to_addrs, subject, body):
     msg['From'] = from_name
     for to_addr in to_addrs:
         msg['To'] = to_addr
-        s.sendmail(from_addr, to_addr, msg.as_string())
-    s.quit()
+        server.sendmail(from_addr, to_addr, msg.as_string())
+    server.quit()
 
 
 def main(to_addr):
