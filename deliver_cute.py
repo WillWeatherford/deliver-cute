@@ -13,10 +13,10 @@ import praw
 import smtplib
 import calendar
 import requests
-from heapq import merge
 from pytz import timezone
 from bs4 import BeautifulSoup
 from operator import attrgetter
+from itertools import chain, tee
 from datetime import date, datetime
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
@@ -68,13 +68,12 @@ YT_PAT = re.compile(r'.*(youtu\.be|youtube\.com).*')
 SRC_PAT = re.compile(r'http(s)?://i\.(imgur|reddituploads|redd).*\.[a-z]{3,4}')
 
 
-def gather_cute_posts(subreddit_names, limit):
+def gather_posts(subreddit_names, limit):
     """Generate image urls from top links in cute subs, sorted by score."""
     reddit = praw.Reddit(user_agent=USER_AGENT)
     subreddits = (reddit.get_subreddit(name) for name in subreddit_names)
-    all_posts = (sub.get_top_from_day(limit=limit) for sub in subreddits)
-
-    for post in merge(*all_posts, key=attrgetter('score'), reverse=True):
+    posts = chain(*(sub.get_top_from_day(limit=limit) for sub in subreddits))
+    for post in posts:
         print('sub: {} url: {}; score: {}'
               ''.format(post.subreddit, post.url, post.score))
         yield post
@@ -164,22 +163,31 @@ def subscribers_for_now():
     return Subscriber.objects.filter(send_hour=now.hour)
 
 
-def send_email_from_gmail(from_addr, from_name, subscribers, subject, body):
+def setup_email_server(username, password):
     """Send an email using gmail's smtp server."""
     server = smtplib.SMTP('smtp.gmail.com', 587)
     server.ehlo()
     server.starttls()
     server.login(USERNAME, PASSWORD)
+    return server
 
+
+def send_email_from_gmail(server, from_addr, from_name, to_addr, subject, body):
+    """Send an email with given server and message info."""
     html = MIMEText(body, 'html')
     msg = MIMEMultipart('alternative')
     msg.attach(html)
     msg['Subject'] = subject
     msg['From'] = from_name
-    for sub in subscribers:
-        msg['To'] = sub.email
-        server.sendmail(from_addr, sub.email, msg.as_string())
-    server.quit()
+    msg['To'] = to_addr
+    server.sendmail(from_addr, to_addr, msg.as_string())
+
+
+def get_relevant_posts(posts, subscriber):
+    """Filter only those posts selected by the current subscriber."""
+    for post in posts:
+        if post.subreddit.display_name in map(str, subscriber.subreddits.all()):
+            yield post
 
 
 def main(to_addr):
@@ -189,12 +197,21 @@ def main(to_addr):
         now = datetime.now(tz=timezone('US/Pacific'))
         print('No subscribers want cute delivered at {}'.format(now.hour))
         return
-    posts = gather_cute_posts(subscribers, LIMIT)
+
+    subreddits = set(chain(*(s.subreddits.all() for s in subscribers)))
+    subreddit_names = map(str, subreddits)
+    posts = gather_posts(subreddit_names, LIMIT)
     posts = dedupe_posts(posts)
     posts = fix_image_links(posts)
+
     subject = get_email_subject()
-    body = get_email_body(posts)
-    send_email_from_gmail(USERNAME, FROM_NAME, subscribers, subject, body)
+    server = setup_email_server(USERNAME, PASSWORD)
+
+    for subscriber, posts in zip(subscribers, tee(posts, subscribers.count())):
+        relevant_posts = get_relevant_posts(posts, subscriber)
+        relevant_posts = sorted(relevant_posts, key=attrgetter('score'), reverse=True)
+        body = get_email_body(relevant_posts)
+        send_email_from_gmail(server, USERNAME, FROM_NAME, subscriber.email, subject, body)
 
 
 if __name__ == '__main__':
