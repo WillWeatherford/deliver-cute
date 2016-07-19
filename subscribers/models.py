@@ -20,6 +20,11 @@ class Subscriber(md.Model):
         """String representation of subscriber's email."""
         return self.email
 
+    def subreddit_names(self):
+        """Generate just the names of related subreddits."""
+        for subreddit in self.subreddits.all():
+            yield subreddit.display_name
+
 
 class SubReddit(md.Model):
     """Subreddit chosen by Subscriber through Many-To-Many Relationship."""

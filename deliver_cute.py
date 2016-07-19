@@ -14,9 +14,9 @@ import smtplib
 import calendar
 import requests
 from pytz import timezone
+from itertools import chain
 from bs4 import BeautifulSoup
 from operator import attrgetter
-from itertools import chain, tee
 from datetime import date, datetime
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
@@ -34,19 +34,6 @@ except KeyError:
     sys.exit()
 
 USER_AGENT = 'python:deliver_cute:v1.0 (by /u/____OOOO____)'
-CUTE_SUBS = [
-    'AnimalsBeingBros',
-    'AnimalsBeingConfused',
-    'AnimalsBeingDerps',
-    'aww',
-    'awwgifs',
-    'babybigcatgifs',
-    'babyelephantgifs',
-    'Eyebleach',
-    'gifsofotters',
-    'kittengifs',
-    'StartledCats',
-]
 LIMIT = 10
 
 EMAIL_SUBJECT_TEMPLATE = 'Cute Pics for {}'
@@ -183,16 +170,8 @@ def send_email_from_gmail(server, from_addr, from_name, to_addr, subject, body):
     server.sendmail(from_addr, to_addr, msg.as_string())
 
 
-def get_relevant_posts(post_map, subscriber):
-    """Filter only those posts selected by the current subscriber."""
-    for subreddit_name, posts in post_map.items():
-        if subreddit_name in map(str, subscriber.subreddits.all()):
-            for post in posts:
-                yield post
-
-
 def create_post_map(subreddit_names, limit):
-    """."""
+    """Create mapping of top posts to their subreddit names."""
     reddit = praw.Reddit(user_agent=USER_AGENT)
     post_map = dict.fromkeys(subreddit_names)
     for name in post_map:
@@ -203,6 +182,14 @@ def create_post_map(subreddit_names, limit):
     return post_map
 
 
+def get_relevant_posts(post_map, subscriber):
+    """Filter only those posts selected by the current subscriber."""
+    for subreddit_name, posts in post_map.items():
+        if subreddit_name in subscriber.subreddit_names():
+            for post in posts:
+                yield post
+
+
 def main(to_addr):
     """Gather then email top cute links."""
     subscribers = subscribers_for_now()
@@ -211,14 +198,8 @@ def main(to_addr):
         print('No subscribers want cute delivered at {}'.format(now.hour))
         return
 
-    subreddits = chain(*(s.subreddits.all() for s in subscribers))
-    subreddit_names = map(str, subreddits)
-
+    subreddit_names = chain(*(s.subreddit_names() for s in subscribers))
     post_map = create_post_map(subreddit_names, LIMIT)
-    print(post_map)
-
-    # posts = gather_posts(subreddit_names, LIMIT)
-    # posts = fix_image_links(posts)
 
     subject = get_email_subject()
     server = setup_email_server(USERNAME, PASSWORD)
