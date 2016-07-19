@@ -17,10 +17,12 @@ class Main(CreateView):
     def form_valid(self, form):
         """Create new Subscriber instance or update if already in database."""
         data = form.cleaned_data
+        subreddits = data.pop('subreddits')
         instance, created = Subscriber.objects.update_or_create(
             email=data.get('email', ''),
             defaults=data,
         )
         instance.save()
+        instance.subreddits.add(*subreddits)
         self.object = instance
         return HttpResponseRedirect(self.get_success_url())
