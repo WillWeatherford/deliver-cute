@@ -15,7 +15,6 @@ import calendar
 import requests
 from heapq import merge
 from pytz import timezone
-from itertools import chain
 from bs4 import BeautifulSoup
 from operator import attrgetter
 from datetime import date, datetime
@@ -67,15 +66,6 @@ PIC_TEMPLATE = '''
 
 YT_PAT = re.compile(r'.*(youtu\.be|youtube\.com).*')
 SRC_PAT = re.compile(r'http(s)?://i\.(imgur|reddituploads|redd).*\.[a-z]{3,4}')
-
-
-def is_gen_empty(gen):
-    """Simple way to check if a generator is empty."""
-    try:
-        first = next(gen)
-    except StopIteration:
-        return True, gen
-    return False, chain([first], gen)
 
 
 def gather_cute_posts(subreddit_names, limit):
@@ -168,16 +158,13 @@ def htmlize_posts(posts):
         )
 
 
-def get_to_addrs():
-    """Collect the email addresses of recipients."""
+def subscribers_for_now():
+    """Collect subscribers with send_hour set to current time."""
     now = datetime.now(tz=timezone('US/Pacific'))
-    subscribers = Subscriber.objects.filter(send_hour=now.hour)
-    for subscriber in subscribers:
-        print(subscriber.email)
-        yield subscriber.email
+    return Subscriber.objects.filter(send_hour=now.hour)
 
 
-def send_email_from_gmail(from_addr, from_name, to_addrs, subject, body):
+def send_email_from_gmail(from_addr, from_name, subscribers, subject, body):
     """Send an email using gmail's smtp server."""
     server = smtplib.SMTP('smtp.gmail.com', 587)
     server.ehlo()
@@ -189,26 +176,25 @@ def send_email_from_gmail(from_addr, from_name, to_addrs, subject, body):
     msg.attach(html)
     msg['Subject'] = subject
     msg['From'] = from_name
-    for to_addr in to_addrs:
-        msg['To'] = to_addr
-        server.sendmail(from_addr, to_addr, msg.as_string())
+    for sub in subscribers:
+        msg['To'] = sub.email
+        server.sendmail(from_addr, sub.email, msg.as_string())
     server.quit()
 
 
 def main(to_addr):
     """Gather then email top cute links."""
-    to_addrs = get_to_addrs()
-    no_subscribers, to_addrs = is_gen_empty(to_addrs)
-    if no_subscribers:
+    subscribers = subscribers_for_now()
+    if not subscribers:
         now = datetime.now(tz=timezone('US/Pacific'))
         print('No subscribers want cute delivered at {}'.format(now.hour))
         return
-    posts = gather_cute_posts(CUTE_SUBS, LIMIT)
+    posts = gather_cute_posts(subscribers, LIMIT)
     posts = dedupe_posts(posts)
     posts = fix_image_links(posts)
     subject = get_email_subject()
     body = get_email_body(posts)
-    send_email_from_gmail(USERNAME, FROM_NAME, to_addrs, subject, body)
+    send_email_from_gmail(USERNAME, FROM_NAME, subscribers, subject, body)
 
 
 if __name__ == '__main__':
