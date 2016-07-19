@@ -1,5 +1,5 @@
 """Subscriber model tracking preferences for each email."""
-from django.db import models
+from django.db import models as md
 
 
 def get_hour(n):
@@ -9,8 +9,15 @@ def get_hour(n):
 HOUR_CHOICES = map(get_hour, range(24))
 
 
-class Subscriber(models.Model):
+class Subscriber(md.Model):
     """Subscriber model tracking preferences for each email."""
 
-    email = models.EmailField()
-    send_hour = models.IntegerField(choices=HOUR_CHOICES, default=8)
+    email = md.EmailField()
+    send_hour = md.IntegerField(choices=HOUR_CHOICES, default=8)
+    subreddits = md.ManyToManyField('SubReddit', related_name='subscribers')
+
+
+class SubReddit(md.Model):
+    """Subreddit chosen by Subscriber through Many-To-Many Relationship."""
+
+    display_name = md.CharField(max_length=21, unique=True)
