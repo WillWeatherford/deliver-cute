@@ -183,11 +183,24 @@ def send_email_from_gmail(server, from_addr, from_name, to_addr, subject, body):
     server.sendmail(from_addr, to_addr, msg.as_string())
 
 
-def get_relevant_posts(posts, subscriber):
+def get_relevant_posts(post_map, subscriber):
     """Filter only those posts selected by the current subscriber."""
-    for post in posts:
-        if post.subreddit.display_name in map(str, subscriber.subreddits.all()):
-            yield post
+    for subreddit_name, posts in post_map.items():
+        if subreddit_name in map(str, subscriber.subreddits.all()):
+            for post in posts:
+                yield post
+
+
+def create_post_map(subreddit_names, limit):
+    """."""
+    reddit = praw.Reddit(user_agent=USER_AGENT)
+    post_map = dict.fromkeys(subreddit_names)
+    for name in post_map:
+        subreddit = reddit.get_subreddit(name)
+        new_posts = subreddit.get_top_from_day(limit=limit)
+        new_posts = fix_image_links(new_posts)
+        post_map[name] = list(new_posts)
+    return post_map
 
 
 def main(to_addr):
@@ -198,21 +211,26 @@ def main(to_addr):
         print('No subscribers want cute delivered at {}'.format(now.hour))
         return
 
-    subreddits = set(chain(*(s.subreddits.all() for s in subscribers)))
+    subreddits = chain(*(s.subreddits.all() for s in subscribers))
     subreddit_names = map(str, subreddits)
-    posts = gather_posts(subreddit_names, LIMIT)
-    posts = dedupe_posts(posts)
-    posts = fix_image_links(posts)
+
+    post_map = create_post_map(subreddit_names, LIMIT)
+    print(post_map)
+
+    # posts = gather_posts(subreddit_names, LIMIT)
+    # posts = fix_image_links(posts)
 
     subject = get_email_subject()
     server = setup_email_server(USERNAME, PASSWORD)
 
-    for subscriber, posts in zip(subscribers, tee(posts, subscribers.count())):
-        relevant_posts = get_relevant_posts(posts, subscriber)
-        relevant_posts = sorted(relevant_posts, key=attrgetter('score'), reverse=True)
-        body = get_email_body(relevant_posts)
+    for subscriber in subscribers:
+        posts = get_relevant_posts(post_map, subscriber)
+        posts = dedupe_posts(posts)
+        posts = sorted(posts, key=attrgetter('score'), reverse=True)
+        body = get_email_body(posts)
         send_email_from_gmail(server, USERNAME, FROM_NAME, subscriber.email, subject, body)
 
+    server.quit()
 
 if __name__ == '__main__':
     try:
