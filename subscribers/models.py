@@ -16,8 +16,16 @@ class Subscriber(md.Model):
     send_hour = md.IntegerField(choices=HOUR_CHOICES, default=8)
     subreddits = md.ManyToManyField('SubReddit', related_name='subscribers')
 
+    def __str__(self):
+        """String representation of subscriber's email."""
+        return self.email
+
 
 class SubReddit(md.Model):
     """Subreddit chosen by Subscriber through Many-To-Many Relationship."""
 
     display_name = md.CharField(max_length=21, unique=True)
+
+    def __str__(self):
+        """String representation of subreddit's display name."""
+        return self.display_name

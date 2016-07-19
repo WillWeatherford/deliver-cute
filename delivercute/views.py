@@ -1,6 +1,7 @@
 """Views for Deliver Cute website."""
 
 from subscribers.models import Subscriber
+from subscribers.forms import SubscriberForm
 from django.views.generic import CreateView
 from django.http import HttpResponseRedirect
 
@@ -10,7 +11,7 @@ class Main(CreateView):
 
     template_name = 'main.html'
     model = Subscriber
-    fields = ['email', 'send_hour']
+    form_class = SubscriberForm
     success_url = '/'
 
     def form_valid(self, form):
