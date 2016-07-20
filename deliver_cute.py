@@ -159,7 +159,7 @@ def setup_email_server(username, password):
     return server
 
 
-def send_email_from_gmail(server, from_addr, from_name, to_addr, subject, body):
+def send_email(server, from_addr, from_name, to_addr, subject, body):
     """Send an email with given server and message info."""
     html = MIMEText(body, 'html')
     msg = MIMEMultipart('alternative')
@@ -168,6 +168,7 @@ def send_email_from_gmail(server, from_addr, from_name, to_addr, subject, body):
     msg['From'] = from_name
     msg['To'] = to_addr
     server.sendmail(from_addr, to_addr, msg.as_string())
+    print('Email send to {}'.format(to_addr))
 
 
 def create_post_map(subreddit_names, limit):
@@ -207,7 +208,7 @@ def main(to_addr):
         posts = dedupe_posts(posts)
         posts = sorted(posts, key=attrgetter('score'), reverse=True)
         body = get_email_body(posts)
-        send_email_from_gmail(server, USERNAME, FROM_NAME, subscriber.email, subject, body)
+        send_email(server, USERNAME, FROM_NAME, subscriber.email, subject, body)
 
     server.quit()
 
