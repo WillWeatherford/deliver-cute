@@ -13,7 +13,6 @@ import praw
 import smtplib
 import calendar
 import requests
-from heapq import merge
 from pytz import timezone
 from itertools import chain
 from bs4 import BeautifulSoup
@@ -35,19 +34,6 @@ except KeyError:
     sys.exit()
 
 USER_AGENT = 'python:deliver_cute:v1.0 (by /u/____OOOO____)'
-CUTE_SUBS = [
-    'AnimalsBeingBros',
-    'AnimalsBeingConfused',
-    'AnimalsBeingDerps',
-    'aww',
-    'awwgifs',
-    'babybigcatgifs',
-    'babyelephantgifs',
-    'Eyebleach',
-    'gifsofotters',
-    'kittengifs',
-    'StartledCats',
-]
 LIMIT = 10
 
 EMAIL_SUBJECT_TEMPLATE = 'Cute Pics for {}'
@@ -69,22 +55,12 @@ YT_PAT = re.compile(r'.*(youtu\.be|youtube\.com).*')
 SRC_PAT = re.compile(r'http(s)?://i\.(imgur|reddituploads|redd).*\.[a-z]{3,4}')
 
 
-def is_gen_empty(gen):
-    """Simple way to check if a generator is empty."""
-    try:
-        first = next(gen)
-    except StopIteration:
-        return True, gen
-    return False, chain([first], gen)
-
-
-def gather_cute_posts(subreddit_names, limit):
+def gather_posts(subreddit_names, limit):
     """Generate image urls from top links in cute subs, sorted by score."""
     reddit = praw.Reddit(user_agent=USER_AGENT)
     subreddits = (reddit.get_subreddit(name) for name in subreddit_names)
-    all_posts = (sub.get_top_from_day(limit=limit) for sub in subreddits)
-
-    for post in merge(*all_posts, key=attrgetter('score'), reverse=True):
+    posts = chain(*(sub.get_top_from_day(limit=limit) for sub in subreddits))
+    for post in posts:
         print('sub: {} url: {}; score: {}'
               ''.format(post.subreddit, post.url, post.score))
         yield post
@@ -168,48 +144,73 @@ def htmlize_posts(posts):
         )
 
 
-def get_to_addrs():
-    """Collect the email addresses of recipients."""
+def subscribers_for_now():
+    """Collect subscribers with send_hour set to current time."""
     now = datetime.now(tz=timezone('US/Pacific'))
-    subscribers = Subscriber.objects.filter(send_hour=now.hour)
-    for subscriber in subscribers:
-        print(subscriber.email)
-        yield subscriber.email
+    return Subscriber.objects.filter(send_hour=now.hour)
 
 
-def send_email_from_gmail(from_addr, from_name, to_addrs, subject, body):
+def setup_email_server(username, password):
     """Send an email using gmail's smtp server."""
     server = smtplib.SMTP('smtp.gmail.com', 587)
     server.ehlo()
     server.starttls()
     server.login(USERNAME, PASSWORD)
+    return server
 
+
+def send_email(server, from_addr, from_name, to_addr, subject, body):
+    """Send an email with given server and message info."""
     html = MIMEText(body, 'html')
     msg = MIMEMultipart('alternative')
     msg.attach(html)
     msg['Subject'] = subject
     msg['From'] = from_name
-    for to_addr in to_addrs:
-        msg['To'] = to_addr
-        server.sendmail(from_addr, to_addr, msg.as_string())
-    server.quit()
+    msg['To'] = to_addr
+    server.sendmail(from_addr, to_addr, msg.as_string())
+    print('Email send to {}'.format(to_addr))
+
+
+def create_post_map(subreddit_names, limit):
+    """Create mapping of top posts to their subreddit names."""
+    reddit = praw.Reddit(user_agent=USER_AGENT)
+    post_map = dict.fromkeys(subreddit_names)
+    for name in post_map:
+        subreddit = reddit.get_subreddit(name)
+        new_posts = subreddit.get_top_from_day(limit=limit)
+        new_posts = fix_image_links(new_posts)
+        post_map[name] = list(new_posts)
+    return post_map
+
+
+def get_relevant_posts(post_map, subscriber):
+    """Filter only those posts selected by the current subscriber."""
+    for subreddit_name in subscriber.subreddit_names():
+        yield from iter(post_map[subreddit_name])
 
 
 def main(to_addr):
     """Gather then email top cute links."""
-    to_addrs = get_to_addrs()
-    no_subscribers, to_addrs = is_gen_empty(to_addrs)
-    if no_subscribers:
+    subscribers = subscribers_for_now()
+    if not subscribers:
         now = datetime.now(tz=timezone('US/Pacific'))
         print('No subscribers want cute delivered at {}'.format(now.hour))
         return
-    posts = gather_cute_posts(CUTE_SUBS, LIMIT)
-    posts = dedupe_posts(posts)
-    posts = fix_image_links(posts)
-    subject = get_email_subject()
-    body = get_email_body(posts)
-    send_email_from_gmail(USERNAME, FROM_NAME, to_addrs, subject, body)
 
+    subreddit_names = chain(*(s.subreddit_names() for s in subscribers))
+    post_map = create_post_map(subreddit_names, LIMIT)
+
+    subject = get_email_subject()
+    server = setup_email_server(USERNAME, PASSWORD)
+
+    for subscriber in subscribers:
+        posts = get_relevant_posts(post_map, subscriber)
+        posts = dedupe_posts(posts)
+        posts = sorted(posts, key=attrgetter('score'), reverse=True)
+        body = get_email_body(posts)
+        send_email(server, USERNAME, FROM_NAME, subscriber.email, subject, body)
+
+    server.quit()
 
 if __name__ == '__main__':
     try:
