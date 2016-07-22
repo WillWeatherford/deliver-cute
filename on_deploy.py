@@ -1,3 +1,4 @@
+#!/usr/bin/python
 """Run commands upon deployment to set up admin user and initial subreddits."""
 
 import os
