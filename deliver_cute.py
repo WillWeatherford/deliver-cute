@@ -27,8 +27,8 @@ django.setup()
 from subscribers.models import Subscriber
 
 try:
-    USERNAME = os.environ['USERNAME']
-    PASSWORD = os.environ['PASSWORD']
+    USERNAME = os.environ['DELIVERCUTE_EMAIL']
+    PASSWORD = os.environ['DELIVERCUTE_PASSWORD']
 except KeyError:
     print('Global security variables not set.')
     sys.exit()
