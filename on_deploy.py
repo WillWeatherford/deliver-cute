@@ -4,9 +4,10 @@
 import os
 import sys
 import django
-# os.environ.setdefault("DJANGO_SETTINGS_MODULE", "delivercute.settings")
 django.setup()
+
 from django.contrib.auth.models import User
+from django.db.utils import IntegrityError
 from subscribers.models import SubReddit
 
 SUBREDDIT_NAMES = [
@@ -31,9 +32,15 @@ except KeyError:
     print('Global security variables not set.')
     sys.exit()
 
-superuser = User.objects.create_superuser('delivercute', EMAIL, PASSWORD)
-superuser.save()
+try:
+    superuser = User.objects.create_superuser('delivercute', EMAIL, PASSWORD)
+    superuser.save()
+except IntegrityError:
+    print('delivercute superuser already in database.')
 
 for subreddit_name in SUBREDDIT_NAMES:
-    new = SubReddit(display_name=subreddit_name)
-    new.save()
+    try:
+        new = SubReddit(display_name=subreddit_name)
+        new.save()
+    except IntegrityError:
+        print('SubReddit {} already in database.'.format(subreddit_name))
