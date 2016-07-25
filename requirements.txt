@@ -3,6 +3,7 @@ beautifulsoup4==4.4.1
 bs4==0.0.1
 coverage==4.1
 decorator==4.0.10
+dj-database-url==0.4.1
 Django==1.9.7
 ipython==4.2.0
 ipython-genutils==0.1.0
