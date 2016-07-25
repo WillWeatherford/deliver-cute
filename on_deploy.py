@@ -4,7 +4,7 @@
 import os
 import sys
 import django
-os.environ.setdefault("DJANGO_SETTINGS_MODULE", "delivercute.settings")
+# os.environ.setdefault("DJANGO_SETTINGS_MODULE", "delivercute.settings")
 django.setup()
 from django.contrib.auth.models import User
 from subscribers.models import SubReddit

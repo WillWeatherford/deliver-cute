@@ -22,7 +22,7 @@ from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 import django
 
-os.environ.setdefault("DJANGO_SETTINGS_MODULE", "delivercute.settings")
+# os.environ.setdefault("DJANGO_SETTINGS_MODULE", "delivercute.settings")
 django.setup()
 from subscribers.models import Subscriber
 
