@@ -1,14 +1,18 @@
+#!/usr/bin/python
 """
 Cuteness Delivery System.
 
 This program requests the top links from various subreddits of cute animals
 and email them to participants.
 """
+try:
+    from html import escape
+except ImportError:
+    from cgi import escape
 
 import os
 import re
 import sys
-import html
 import praw
 import smtplib
 import calendar
@@ -134,11 +138,11 @@ def htmlize_posts(posts):
     for post in posts:
         subreddit = post.subreddit.display_name
         yield PIC_TEMPLATE.format(
-            permalink=html.escape(post.permalink),
-            url=html.escape(post.url),
-            title=html.escape(post.title),
-            subreddit_name=html.escape('/r/' + subreddit),
-            subreddit_url=html.escape('https://www.reddit.com/r/' + subreddit),
+            permalink=escape(post.permalink),
+            url=escape(post.url),
+            title=escape(post.title),
+            subreddit_name=escape('/r/' + subreddit),
+            subreddit_url=escape('https://www.reddit.com/r/' + subreddit),
             width=PIC_WIDTH,
         )
 
