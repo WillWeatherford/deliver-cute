@@ -22,7 +22,6 @@ from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 import django
 
-# os.environ.setdefault("DJANGO_SETTINGS_MODULE", "delivercute.settings")
 django.setup()
 from subscribers.models import Subscriber
 
@@ -186,7 +185,8 @@ def create_post_map(subreddit_names, limit):
 def get_relevant_posts(post_map, subscriber):
     """Filter only those posts selected by the current subscriber."""
     for subreddit_name in subscriber.subreddit_names():
-        yield from iter(post_map[subreddit_name])
+        for post in post_map[subreddit_name]:
+            yield post
 
 
 def main(to_addr):
