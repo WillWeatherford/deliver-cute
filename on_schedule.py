@@ -24,7 +24,6 @@ from operator import attrgetter
 from datetime import date, datetime
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
-from __future__ import unicode_literals
 import django
 
 django.setup()
@@ -42,7 +41,7 @@ LIMIT = 10
 
 EMAIL_SUBJECT_TEMPLATE = 'Cute Pics for {}'
 FROM_NAME = 'Deliver Cute'
-PIC_WIDTH = 400
+PIC_WIDTH = '400'
 PIC_TEMPLATE = '''
 <p>
   <p>
@@ -86,11 +85,10 @@ def fix_image_links(posts):
     for post in posts:
         link = post.url
         if YT_PAT.match(link):
-            print('discarding {} as youtube link'.format(link))
             continue
 
         # Temporary measure until able to display gifv and gyfcat properly
-        if link.endswith('gifv') or 'gfycat' in link:
+        if link.endswith('gifv') or link.endswith('mp4') or 'gfycat' in link:
             continue
 
         if not SRC_PAT.match(link):
@@ -137,14 +135,19 @@ def get_email_body(posts):
 def htmlize_posts(posts):
     """Generate each link as an html-ized image element."""
     for post in posts:
-        subreddit = post.subreddit.display_name
         try:
-            title = str(post.title.decode('utf-8', 'ignore'))
+            subreddit = post.subreddit.display_name.encode('utf-8', 'ignore')
+            title = post.title.encode('utf-8', 'ignore')
+            url = post.url.encode('utf-8', 'ignore')
+            permalink = post.encode('utf-8', 'ignore')
         except AttributeError:
+            subreddit = post.subreddit.display_name
             title = post.title
+            url = post.url
+            permalink = post.permalink
         yield PIC_TEMPLATE.format(
-            permalink=escape(post.permalink),
-            url=escape(post.url),
+            permalink=escape(permalink),
+            url=escape(url),
             title=escape(title),
             subreddit_name=escape('/r/' + subreddit),
             subreddit_url=escape('https://www.reddit.com/r/' + subreddit),
