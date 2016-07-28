@@ -7,8 +7,10 @@ and email them to participants.
 """
 try:
     from html import escape
+    print('Python 3: using html.escape()')
 except ImportError:
     from cgi import escape
+    print('Python 2: using cgi.escape()')
 
 import os
 import re
