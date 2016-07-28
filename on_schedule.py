@@ -49,7 +49,7 @@ PIC_TEMPLATE = '''
     from <a href={subreddit_url}>{subreddit_name}</a>
   </p>
   <p>
-    <img src="{url}" style="width:{width}px" alt={title}>
+    <img src="{url}" style="width:400px" alt={title}>
   </p>
 </p>
 '''
@@ -151,7 +151,7 @@ def htmlize_posts(posts):
             title=escape(title),
             subreddit_name=escape('/r/' + subreddit),
             subreddit_url=escape('https://www.reddit.com/r/' + subreddit),
-            width=PIC_WIDTH,
+            # width=PIC_WIDTH,
         )
 
 
