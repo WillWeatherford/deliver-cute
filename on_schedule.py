@@ -31,12 +31,12 @@ import django
 django.setup()
 from subscribers.models import Subscriber
 
-try:
-    EMAIL = os.environ['DELIVERCUTE_EMAIL']
-    PASSWORD = os.environ['DELIVERCUTE_PASSWORD']
-except KeyError:
-    print('Global security variables not set.')
-    sys.exit()
+# try:
+EMAIL = os.environ['PROJECT_EMAIL']
+APP_PASSWORD = os.environ['PROJECT_APP_PASSWORD']
+# except KeyError:
+#     print('Global security variables not set.')
+#     sys.exit()
 
 USER_AGENT = 'python:deliver_cute:v1.0 (by /u/____OOOO____)'
 LIMIT = 10
@@ -171,7 +171,7 @@ def setup_email_server(email, password):
     server = smtplib.SMTP('smtp.gmail.com', 587)
     server.ehlo()
     server.starttls()
-    server.login(email, PASSWORD)
+    server.login(email, password)
     return server
 
 
@@ -218,7 +218,7 @@ def main(debug):
     post_map = create_post_map(subreddit_names, LIMIT)
 
     subject = get_email_subject(debug)
-    server = setup_email_server(EMAIL, PASSWORD)
+    server = setup_email_server(EMAIL, APP_PASSWORD)
 
     for subscriber in subscribers:
         posts = get_relevant_posts(post_map, subscriber)

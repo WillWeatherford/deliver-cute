@@ -28,12 +28,12 @@ SUBREDDIT_NAMES = [
 ]
 
 # Get project email and human-friendly password from environment
-try:
-    EMAIL = os.environ['DELIVERCUTE_EMAIL']
-    PASSWORD = os.environ['DELIVERCUTE_PASSWORD_BASIC']
-except KeyError:
-    print('Global security variables not set.')
-    sys.exit()
+# try:
+EMAIL = os.environ['PROJECT_EMAIL']
+PASSWORD = os.environ['PROJECT_PASSWORD']
+# except KeyError:
+#     print('Global security variables not set.')
+#     sys.exit()
 
 
 # Set up admin user with project email and human-friendly password
