@@ -52,9 +52,12 @@ for subreddit_name in SUBREDDIT_NAMES:
         print('SubReddit {} already in database.'.format(subreddit_name))
 
 # Set up Subscriber with project email for debugging
-# try:
-debug_sub = Subscriber(email=EMAIL, send_hour=0)
-debug_sub.save()
-debug_sub.subreddits.add(*SubReddit.objects.all())
+debug_sub, created = Subscriber.objects.get_or_create(
+    email=EMAIL,
+    defaults={'email': EMAIL, 'send_hour': 0},
+)
+if created:
+    debug_sub.save()
+    debug_sub.subreddits.add(*SubReddit.objects.all())
 # except IntegrityError:
 #     print('delivercute subscriber already in database.')
