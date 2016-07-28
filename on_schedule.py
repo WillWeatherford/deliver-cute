@@ -31,12 +31,8 @@ import django
 django.setup()
 from subscribers.models import Subscriber
 
-# try:
 EMAIL = os.environ['PROJECT_EMAIL']
 APP_PASSWORD = os.environ['PROJECT_APP_PASSWORD']
-# except KeyError:
-#     print('Global security variables not set.')
-#     sys.exit()
 
 USER_AGENT = 'python:deliver_cute:v1.0 (by /u/____OOOO____)'
 LIMIT = 10

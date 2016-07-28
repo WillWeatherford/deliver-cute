@@ -28,12 +28,8 @@ SUBREDDIT_NAMES = [
 ]
 
 # Get project email and human-friendly password from environment
-# try:
 EMAIL = os.environ['PROJECT_EMAIL']
 PASSWORD = os.environ['PROJECT_PASSWORD']
-# except KeyError:
-#     print('Global security variables not set.')
-#     sys.exit()
 
 
 # Set up admin user with project email and human-friendly password
@@ -51,13 +47,11 @@ for subreddit_name in SUBREDDIT_NAMES:
     except IntegrityError:
         print('SubReddit {} already in database.'.format(subreddit_name))
 
+
 # Set up Subscriber with project email for debugging
 debug_sub, created = Subscriber.objects.get_or_create(
     email=EMAIL,
     defaults={'email': EMAIL, 'send_hour': 0},
 )
 if created:
-    debug_sub.save()
     debug_sub.subreddits.add(*SubReddit.objects.all())
-# except IntegrityError:
-#     print('delivercute subscriber already in database.')
