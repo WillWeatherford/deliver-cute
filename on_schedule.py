@@ -24,6 +24,7 @@ from operator import attrgetter
 from datetime import date, datetime
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
+# from future import unicode_literals
 import django
 
 django.setup()
@@ -138,7 +139,7 @@ def htmlize_posts(posts):
     for post in posts:
         subreddit = post.subreddit.display_name
         try:
-            title = post.title.decode('ascii', errors='ignore')
+            title = post.title.decode('utf-8', errors='ignore')
         except AttributeError:
             title = post.title
         yield PIC_TEMPLATE.format(
