@@ -137,10 +137,14 @@ def htmlize_posts(posts):
     """Generate each link as an html-ized image element."""
     for post in posts:
         subreddit = post.subreddit.display_name
+        try:
+            title = post.title.decode('ascii', errors='ignore')
+        except AttributeError:
+            title = post.title
         yield PIC_TEMPLATE.format(
             permalink=escape(post.permalink),
             url=escape(post.url),
-            title=escape(post.title),
+            title=escape(title),
             subreddit_name=escape('/r/' + subreddit),
             subreddit_url=escape('https://www.reddit.com/r/' + subreddit),
             width=PIC_WIDTH,
