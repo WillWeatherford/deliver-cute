@@ -24,7 +24,7 @@ from operator import attrgetter
 from datetime import date, datetime
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
-from future import unicode_literals
+from __future__ import unicode_literals
 import django
 
 django.setup()
