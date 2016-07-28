@@ -43,16 +43,6 @@ try:
 except IntegrityError:
     print('delivercute superuser already in database.')
 
-
-# Set up Subscriber with project email for debugging
-try:
-    debug_sub = Subscriber(email=EMAIL, send_hour=0)
-    debug_sub.save()
-    debug_sub.subreddits.add(*SubReddit.objects.all())
-except IntegrityError:
-    print('delivercute subscriber already in database.')
-
-
 # Set up initial list of SubReddits from which to gather posts
 for subreddit_name in SUBREDDIT_NAMES:
     try:
@@ -61,6 +51,10 @@ for subreddit_name in SUBREDDIT_NAMES:
     except IntegrityError:
         print('SubReddit {} already in database.'.format(subreddit_name))
 
-
-# Send a test run of the program in debug mode
-on_schedule.main(True)
+# Set up Subscriber with project email for debugging
+# try:
+debug_sub = Subscriber(email=EMAIL, send_hour=0)
+debug_sub.save()
+debug_sub.subreddits.add(*SubReddit.objects.all())
+# except IntegrityError:
+#     print('delivercute subscriber already in database.')

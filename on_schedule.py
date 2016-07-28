@@ -234,4 +234,5 @@ if __name__ == '__main__':
         debug = bool(sys.argv[1])
     except IndexError:
         debug = False
+    print('Debug is {}'.format(debug))
     main(debug)
