@@ -2,30 +2,14 @@
 """Run commands upon deployment to set up admin user and initial subreddits."""
 
 import os
-import sys
 import django
+from constants import SUBREDDIT_NAMES
 django.setup()
 
-import on_schedule
 from django.contrib.auth.models import User
 from django.db.utils import IntegrityError
 from subscribers.models import SubReddit, Subscriber
 
-
-SUBREDDIT_NAMES = [
-    'StartledCats',
-    'kittengifs',
-    'gifsofotters',
-    'Eyebleach',
-    'babyelephantgifs',
-    'babybigcatgifs',
-    'awwgifs',
-    'AnimalsBeingConfused',
-    'AnimalsBeingDerps',
-    'AnimalsBeingBros',
-    'aww',
-    'rarepuppers',
-]
 
 # Get project email and human-friendly password from environment
 EMAIL = os.environ['PROJECT_EMAIL']

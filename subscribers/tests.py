@@ -3,8 +3,13 @@
 from django.test import TestCase
 from .models import Subscriber, SubReddit
 import factory
+from constants import SUBREDDIT_NAMES
+import random
 
 DUMMY_EMAIL = 'example@example.com'
+
+# Test that both models load and save
+# Test that subreddits can be associated to subs
 
 
 class SubRedditFactory(factory.django.DjangoModelFactory):
@@ -15,7 +20,8 @@ class SubRedditFactory(factory.django.DjangoModelFactory):
 
         model = SubReddit
 
-    email = factory.Faker('email')
+    # use factory functionality to produce all instead of random ones.
+    display_name = random.choice(SUBREDDIT_NAMES)
 
 
 class SubscriberFactory(factory.django.DjangoModelFactory):
@@ -27,11 +33,15 @@ class SubscriberFactory(factory.django.DjangoModelFactory):
         model = Subscriber
 
     email = factory.Faker('email')
-    
+    send_hour = random.randrange(24)
 
 
 class SimpleCase(TestCase):
     """Very simple case to test instantiation of Subscriber class."""
+
+    def setUp(self):
+        """Set up model instances."""
+        self.subscriber = SubscriberFactory.create()
 
     def test_initialize(self):
         """Test initialization of new Subscriber."""
