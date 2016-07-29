@@ -7,9 +7,6 @@ from factory.django import DjangoModelFactory
 import factory
 import random
 
-# Test that both models load and save
-# Test that subreddits can be associated to subs
-
 
 class SubRedditFactory(DjangoModelFactory):
     """Creates SubReddit models for testing."""

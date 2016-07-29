@@ -14,3 +14,5 @@ SUBREDDIT_NAMES = [
     'aww',
     'rarepuppers',
 ]
+
+LIMIT = 10

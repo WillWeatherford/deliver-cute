@@ -35,7 +35,6 @@ EMAIL = os.environ['PROJECT_EMAIL']
 APP_PASSWORD = os.environ['PROJECT_APP_PASSWORD']
 
 USER_AGENT = 'python:deliver_cute:v1.0 (by /u/____OOOO____)'
-LIMIT = 10
 
 EMAIL_SUBJECT_TEMPLATE = '{debug}Cute Pics for {date}'
 FROM_NAME = 'Deliver Cute'
