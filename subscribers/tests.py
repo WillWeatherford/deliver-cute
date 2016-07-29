@@ -77,7 +77,18 @@ class MultiCase(TestCase):
             for sr in s.subreddits.all():
                 self.assertTrue(sr.pk)
 
-    def test_subreddit_str(self):
-        """Check str method of subreddit."""
+    def test_subscriber_str(self):
+        """Check str method of Subscriber."""
         for s in self.subscribers:
             self.assertIsInstance(str(s), str)
+
+    def test_subreddit_str(self):
+        """Check str method of SubReddit."""
+        for sr in self.subreddits:
+            self.assertIn(str(sr), SUBREDDIT_NAMES)
+
+    def test_subreddit_names(self):
+        """Test subreddit_names method of Subscriber."""
+        for s in self.subscribers:
+            for name in s.subreddit_names():
+                self.assertIn(name, SUBREDDIT_NAMES)
