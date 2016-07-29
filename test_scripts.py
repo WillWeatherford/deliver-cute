@@ -15,7 +15,7 @@ from factory.django import DjangoModelFactory
 # test htmlization
 # test unicode status
 
-CUTE_POSTS = list(gather_posts(SUBREDDIT_NAMES, LIMIT))
+CUTE_POSTS = []
 FIXED_LINKS = list(fix_image_links(CUTE_POSTS))
 
 WILL_EMAIL = 'weatherford.william@gmail.com'
@@ -35,6 +35,14 @@ EXT = ('.jpg', '.gifv', '.gif', '.png', )
 
 BAD_DOMAIN = ('www.imgur.com/', 'reddit.com/', 'gfycat.com/')
 BAD_EXT = ('', )
+
+
+class RedditAPICase(TestCase):
+    """Test retrieval of posts from reddit API."""
+
+    def setUp(self):
+        self.posts = list(gather_posts(SUBREDDIT_NAMES, LIMIT))
+
 
 
 @pytest.fixture(params=product(PROTO, DOMAIN, HASH, EXT))
