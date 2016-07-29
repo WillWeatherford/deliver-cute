@@ -21,7 +21,7 @@ class SubRedditFactory(factory.django.DjangoModelFactory):
         model = SubReddit
 
     # use factory functionality to produce all instead of random ones.
-    display_name = random.choice(SUBREDDIT_NAMES)
+    display_name = factory.Iterator(SUBREDDIT_NAMES)
 
 
 class SubscriberFactory(factory.django.DjangoModelFactory):
@@ -42,8 +42,8 @@ class SimpleCase(TestCase):
     def setUp(self):
         """Set up model instances."""
         self.subscriber = SubscriberFactory.create()
+        self.subreddit = SubRedditFactory.create()
 
-    def test_initialize(self):
+    def test_subscriber(self):
         """Test initialization of new Subscriber."""
-        newsub = Subscriber(email=DUMMY_EMAIL)
-        newsub.save()
+        self.assertTrue(self.subscriber.pk)
