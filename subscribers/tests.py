@@ -1,18 +1,17 @@
 """Testing Subscriber and SubReddit models."""
 
+from constants import SUBREDDIT_NAMES
 from django.test import TestCase
 from .models import Subscriber, SubReddit
+from factory.django import DjangoModelFactory
 import factory
-from constants import SUBREDDIT_NAMES
 import random
-
-DUMMY_EMAIL = 'example@example.com'
 
 # Test that both models load and save
 # Test that subreddits can be associated to subs
 
 
-class SubRedditFactory(factory.django.DjangoModelFactory):
+class SubRedditFactory(DjangoModelFactory):
     """Creates SubReddit models for testing."""
 
     class Meta:
@@ -20,11 +19,10 @@ class SubRedditFactory(factory.django.DjangoModelFactory):
 
         model = SubReddit
 
-    # use factory functionality to produce all instead of random ones.
     display_name = factory.Iterator(SUBREDDIT_NAMES)
 
 
-class SubscriberFactory(factory.django.DjangoModelFactory):
+class SubscriberFactory(DjangoModelFactory):
     """Creates Subscriber models for testing."""
 
     class Meta:
@@ -59,3 +57,16 @@ class SimpleCase(TestCase):
     def test_one_subreddit(self):
         """Test that one subreddit has been registered in the ORM."""
         self.assertEqual(SubReddit.objects.count(), 1)
+
+
+class MultiCase(TestCase):
+    """Multiple Subscribers with multiple subreddits."""
+
+    def setUp(self):
+        """Setup many Subscribers and SubReddits."""
+        self.subreddits = SubRedditFactory.create_batch(len(SUBREDDIT_NAMES))
+        self.subscribers = SubscriberFactory.create_batch(20)
+        for s in self.subscribers:
+            num = random.randrange(len(SUBREDDIT_NAMES))
+            subscription = SubReddit.objects.order_by('?')[:num]
+            s.subreddits.add(*subscription)
