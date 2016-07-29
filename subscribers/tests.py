@@ -70,3 +70,14 @@ class MultiCase(TestCase):
             num = random.randrange(len(SUBREDDIT_NAMES))
             subscription = SubReddit.objects.order_by('?')[:num]
             s.subreddits.add(*subscription)
+
+    def test_multiple(self):
+        """Check that relationship is sound."""
+        for s in self.subscribers:
+            for sr in s.subreddits.all():
+                self.assertTrue(sr.pk)
+
+    def test_subreddit_str(self):
+        """Check str method of subreddit."""
+        for s in self.subscribers:
+            self.assertIsInstance(str(s), str)
