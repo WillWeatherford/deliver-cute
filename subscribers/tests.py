@@ -47,3 +47,15 @@ class SimpleCase(TestCase):
     def test_subscriber(self):
         """Test initialization of new Subscriber."""
         self.assertTrue(self.subscriber.pk)
+
+    def test_subreddit(self):
+        """Test initialization of new Subreddit."""
+        self.assertTrue(self.subreddit.pk)
+
+    def test_one_subscriber(self):
+        """Test that one subscriber has been registered in the ORM."""
+        self.assertEqual(Subscriber.objects.count(), 1)
+
+    def test_one_subreddit(self):
+        """Test that one subreddit has been registered in the ORM."""
+        self.assertEqual(SubReddit.objects.count(), 1)
