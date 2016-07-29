@@ -7,6 +7,14 @@ from factory.django import DjangoModelFactory
 import factory
 import random
 
+from nose_parameterized import parameterized
+
+SUBR_BATCH_SIZE = len(SUBREDDIT_NAMES)
+SUBS_BATCH_SIZE = 20
+
+SUBR_PARAMS = [(i, ) for i in range(SUBR_BATCH_SIZE)]
+SUBS_PARAMS = [(i, ) for i in range(SUBS_BATCH_SIZE)]
+
 
 class SubRedditFactory(DjangoModelFactory):
     """Creates SubReddit models for testing."""
@@ -61,31 +69,35 @@ class MultiCase(TestCase):
 
     def setUp(self):
         """Setup many Subscribers and SubReddits."""
-        self.subreddits = SubRedditFactory.create_batch(len(SUBREDDIT_NAMES))
-        self.subscribers = SubscriberFactory.create_batch(20)
+        self.subreddits = SubRedditFactory.create_batch(SUBR_BATCH_SIZE)
+        self.subscribers = SubscriberFactory.create_batch(SUBS_BATCH_SIZE)
         for s in self.subscribers:
-            num = random.randrange(len(SUBREDDIT_NAMES))
+            num = random.randrange(SUBR_BATCH_SIZE)
             subscription = SubReddit.objects.order_by('?')[:num]
             s.subreddits.add(*subscription)
 
-    def test_multiple(self):
+    @parameterized.expand(SUBS_PARAMS)
+    def test_multiple(self, idx):
         """Check that relationship is sound."""
-        for s in self.subscribers:
-            for sr in s.subreddits.all():
-                self.assertTrue(sr.pk)
+        subscriber = self.subscribers[idx]
+        for sr in subscriber.subreddits.all():
+            self.assertTrue(sr.pk)
 
-    def test_subscriber_str(self):
+    @parameterized.expand(SUBS_PARAMS)
+    def test_subscriber_str(self, idx):
         """Check str method of Subscriber."""
-        for s in self.subscribers:
-            self.assertIsInstance(str(s), str)
+        subscriber = self.subscribers[idx]
+        self.assertIsInstance(str(subscriber), str)
 
-    def test_subreddit_str(self):
+    @parameterized.expand(SUBR_PARAMS)
+    def test_subreddit_str(self, idx):
         """Check str method of SubReddit."""
-        for sr in self.subreddits:
-            self.assertIn(str(sr), SUBREDDIT_NAMES)
+        subreddit = self.subreddits[idx]
+        self.assertIn(str(subreddit), SUBREDDIT_NAMES)
 
-    def test_subreddit_names(self):
+    @parameterized.expand(SUBS_PARAMS)
+    def test_subreddit_names(self, idx):
         """Test subreddit_names method of Subscriber."""
-        for s in self.subscribers:
-            for name in s.subreddit_names():
-                self.assertIn(name, SUBREDDIT_NAMES)
+        subscriber = self.subscribers[idx]
+        for name in subscriber.subreddit_names():
+            self.assertIn(name, SUBREDDIT_NAMES)
