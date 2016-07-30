@@ -151,16 +151,17 @@ def find_source_link(link):
 def htmlize_posts(posts):
     """Generate each link as an html-ized image element."""
     for post in posts:
-        try:
-            subreddit = post.subreddit.display_name.encode('utf-8', 'ignore')
-            title = post.title.encode('utf-8', 'ignore')
-            url = post.url.encode('utf-8', 'ignore')
-            permalink = post.permalink.encode('utf-8', 'ignore')
-        except AttributeError:
-            subreddit = post.subreddit.display_name
-            title = post.title
-            url = post.url
-            permalink = post.permalink
+        import pdb; pdb.set_trace()
+        # try:
+        #     subreddit = post.subreddit.display_name.encode('utf-8', 'ignore')
+        #     title = post.title.encode('utf-8', 'ignore')
+        #     url = post.url.encode('utf-8', 'ignore')
+        #     permalink = post.permalink.encode('utf-8', 'ignore')
+        # except AttributeError:
+        subreddit = post.subreddit.display_name
+        title = post.title
+        url = post.url
+        permalink = post.permalink
         yield PIC_TEMPLATE.format(
             permalink=escape(permalink),
             url=escape(url),
