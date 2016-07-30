@@ -59,16 +59,10 @@ class FakePost(object):
         fake = Faker()
         self.subreddit = FakePRAWsubreddit()
         self.subreddit.display_name = fake.pystr(min_chars=8, max_chars=8)
-        self.title = fake.sentence()
+        # Need more thorough unicode character range
+        self.title = u'\u2018' + fake.sentence() + u'\u2019'
         self.url = fake.url()
         self.permalink = fake.url()
-        # try:
-        #     self.subreddit.display_name = unicode(self.subreddit.display_name)
-        #     self.title = unicode(self.title)
-        #     self.url = unicode(self.url)
-        #     self.permalink = unicode(self.permalink)
-        # except NameError:
-        #     pass
 
     @classmethod
     def create_batch(cls, size):
