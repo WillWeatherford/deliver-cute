@@ -4,8 +4,8 @@ import pytest
 import random
 from faker import Faker
 from string import ascii_letters, digits
-from itertools import product
-from on_schedule import fix_image_links
+from itertools import product, chain
+from on_schedule import fix_image_links, htmlize_posts
 from constants import SUBREDDIT_NAMES, LIMIT, EMAIL
 from django.test import TestCase
 from nose_parameterized import parameterized
@@ -14,9 +14,14 @@ from subscribers.tests import (
     SubRedditFactory,
 )
 
+try:
+    UNICODE = unicode
+    print('Python 2, using unicode class.')
+except NameError:
+    UNICODE = str
+    print('Python 3, using str class.')
+
 # TODO
-# test htmlization
-# Fake post factory
 # test unicode status of incoming PRAW post objects
 # test encoding of outgoing email
 
@@ -70,6 +75,16 @@ class FakePost(object):
         return [cls() for _ in range(size)]
 
 
+FAKE_POSTS = FakePost.create_batch(20)
+HTMLIZED_POSTS = ((post, ) for post in htmlize_posts(FAKE_POSTS))
+FAKE_POST_ATTRS = (
+    (attr, ) for attr in chain(
+        *((p.title, p.url, p.permalink, p.subreddit.display_name)
+          for p in FAKE_POSTS)
+    )
+)
+
+
 class DebugCase(TestCase):
     """Run full on_schedule script in debug mode."""
 
@@ -88,26 +103,15 @@ class DebugCase(TestCase):
 class FakePostsCase(TestCase):
     """Using fake posts to test unicode and html escaping."""
 
-    def setUp(self):
-        """Create a new batch of fake Posts."""
-        self.posts = FakePost.create_batch(4)
-
-    def test_unicode(self):
+    @parameterized.expand(FAKE_POST_ATTRS)
+    def test_unicode(self, attr):
         """Ensure that all posts are unicode."""
-        for post in self.posts:
-            try:
-                self.assertIsInstance(post.title, unicode)
-                self.assertIsInstance(post.url, unicode)
-                self.assertIsInstance(post.permalink, unicode)
-                self.assertIsInstance(post.subreddit.display_name, unicode)
-            except NameError:
-                self.assertTrue(True)
+        self.assertIsInstance(attr, UNICODE)
 
-    def test_htmlize(self):
+    @parameterized.expand(HTMLIZED_POSTS)
+    def test_htmlize(self, post):
         """Test that htmlize runs without breaking."""
-        from on_schedule import htmlize_posts
-        for post in htmlize_posts(self.posts):
-            self.assertTrue(post)
+        self.assertIsInstance(post, UNICODE)
 
 
 class RedditAPICase(TestCase):
