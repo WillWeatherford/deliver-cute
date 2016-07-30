@@ -26,6 +26,12 @@ class SubRedditFactory(DjangoModelFactory):
 
     display_name = factory.Iterator(SUBREDDIT_NAMES)
 
+    @classmethod
+    def create_batch(cls, **kwargs):
+        """Constant batch size of all subreddits."""
+        return super(SubRedditFactory, cls).create_batch(
+            SUBR_BATCH_SIZE, **kwargs)
+
 
 class SubscriberFactory(DjangoModelFactory):
     """Creates Subscriber models for testing."""
@@ -69,7 +75,7 @@ class MultiCase(TestCase):
 
     def setUp(self):
         """Setup many Subscribers and SubReddits."""
-        self.subreddits = SubRedditFactory.create_batch(SUBR_BATCH_SIZE)
+        self.subreddits = SubRedditFactory.create_batch()
         self.subscribers = SubscriberFactory.create_batch(SUBS_BATCH_SIZE)
         for s in self.subscribers:
             num = random.randrange(SUBR_BATCH_SIZE)

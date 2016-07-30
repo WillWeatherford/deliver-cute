@@ -12,7 +12,6 @@ except ImportError:
     from cgi import escape
     print('Python 2: using cgi.escape()')
 
-import os
 import re
 import sys
 import praw
@@ -27,12 +26,9 @@ from operator import attrgetter
 from datetime import date, datetime
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
-from constants import LIMIT
+from constants import LIMIT, EMAIL, APP_PASSWORD
 django.setup()
 from subscribers.models import Subscriber
-
-EMAIL = os.environ['PROJECT_EMAIL']
-APP_PASSWORD = os.environ['PROJECT_APP_PASSWORD']
 
 USER_AGENT = 'python:deliver_cute:v1.0 (by /u/____OOOO____)'
 
@@ -61,7 +57,7 @@ def main(debug):
     if not subscribers:
         now = datetime.now(tz=timezone('US/Pacific'))
         print('No subscribers want cute delivered at {}'.format(now.hour))
-        return
+        return 0
 
     subreddit_names = chain(*(s.subreddit_names() for s in subscribers))
     post_map = create_post_map(subreddit_names, LIMIT)
@@ -69,14 +65,17 @@ def main(debug):
     server = setup_email_server(EMAIL, APP_PASSWORD)
     subject = get_email_subject(debug)
 
+    sent_count = 0
     for subscriber in subscribers:
         posts = get_relevant_posts(post_map, subscriber)
         posts = dedupe_posts(posts)
         posts = sorted(posts, key=attrgetter('score'), reverse=True)
         body = get_email_body(posts)
         send_email(server, EMAIL, FROM_NAME, subscriber.email, subject, body)
+        sent_count += 1
 
     server.quit()
+    return sent_count
 
 
 def subscribers_for_now(debug):

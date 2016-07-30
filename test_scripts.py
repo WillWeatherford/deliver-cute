@@ -6,15 +6,19 @@ import factory
 from string import ascii_letters, digits
 from itertools import product
 from on_schedule import fix_image_links, SRC_PAT
-from constants import SUBREDDIT_NAMES, LIMIT
+from constants import SUBREDDIT_NAMES, LIMIT, EMAIL
 from django.test import TestCase
-# from subscribers.models import Subscriber, SubReddit
 from nose_parameterized import parameterized
+from subscribers.tests import (
+    SubscriberFactory,
+    SubRedditFactory,
+)
 
 # TODO
 # test htmlization
 # Fake post factory
 # test unicode status of incoming PRAW post objects
+# test encoding of outgoing email
 
 CUTE_POSTS = []
 FIXED_LINKS = list(fix_image_links(CUTE_POSTS))
@@ -41,6 +45,21 @@ GOOD_URLS = product(PROTO, DOMAIN, HASH, EXT)
 BAD_URLS = product(PROTO, BAD_DOMAIN, HASH, BAD_EXT)
 
 
+class DebugCase(TestCase):
+    """Run full on_schedule script in debug mode."""
+
+    def setUp(self):
+        """Setup debug user with project email."""
+        self.subreddits = SubRedditFactory.create_batch()
+        self.subscriber = SubscriberFactory.create(email=EMAIL)
+        self.subscriber.subreddits.add(*self.subreddits)
+
+    def test_main(self):
+        """Test the main() function of on_schedule.py in debug mode."""
+        from on_schedule import main
+        self.assertEqual(main(True), 1)
+
+
 class RedditAPICase(TestCase):
     """Test retrieval of posts from reddit API."""
 
@@ -48,23 +67,27 @@ class RedditAPICase(TestCase):
         """Get post data to test."""
 
 
-
 class CheckURLCase(TestCase):
     """Test URL matching regexes."""
+
+    def setUp(self):
+        """Get regex pattern."""
+        from on_schedule import SRC_PAT
+        self.regex = SRC_PAT
 
     @parameterized.expand((url, ) for url in GOOD_URLS)
     def test_src_pat_good(self, url):
         """Confirm that link regex works as expected for good urls."""
-        self.assertIsNotNone(SRC_PAT.match(''.join(url)))
+        self.assertIsNotNone(self.regex.match(''.join(url)))
 
     @parameterized.expand((url, ) for url in BAD_URLS)
     def test_src_pat_bad(self, url):
         """Confirm that link regex works as expected for bad urls."""
-        self.assertIsNone(SRC_PAT.match(''.join(url)))
+        self.assertIsNone(self.regex.match(''.join(url)))
 
     # def test_cute_links_source(fixed_link):
     #     """Confirm that links fixed by source fixer match the expected pattern."""
-    #     assert SRC_PAT.match(fixed_link.url) is not None
+    #     assert self.regex.match(fixed_link.url) is not None
 
 
 # @pytest.fixture(params=CUTE_POSTS)

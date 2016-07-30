@@ -3,18 +3,12 @@
 
 import os
 import django
-from constants import SUBREDDIT_NAMES
+from constants import SUBREDDIT_NAMES, EMAIL, PASSWORD
 django.setup()
 
 from django.contrib.auth.models import User
 from django.db.utils import IntegrityError
 from subscribers.models import SubReddit, Subscriber
-
-
-# Get project email and human-friendly password from environment
-EMAIL = os.environ['PROJECT_EMAIL']
-PASSWORD = os.environ['PROJECT_PASSWORD']
-
 
 # Set up admin user with project email and human-friendly password
 try:
