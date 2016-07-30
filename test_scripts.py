@@ -96,7 +96,7 @@ class FakePostsCase(TestCase):
 
     def setUp(self):
         """Create a new batch of fake Posts."""
-        self.posts = FakePost.create_batch(20)
+        self.posts = FakePost.create_batch(4)
 
     def test_htmlize(self):
         """Test that htmlize runs without breaking."""
