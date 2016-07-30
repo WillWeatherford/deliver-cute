@@ -16,6 +16,7 @@ import os
 import re
 import sys
 import praw
+import django
 import smtplib
 import calendar
 import requests
@@ -26,8 +27,7 @@ from operator import attrgetter
 from datetime import date, datetime
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
-import django
-
+from constants import LIMIT
 django.setup()
 from subscribers.models import Subscriber
 
@@ -66,8 +66,8 @@ def main(debug):
     subreddit_names = chain(*(s.subreddit_names() for s in subscribers))
     post_map = create_post_map(subreddit_names, LIMIT)
 
-    subject = get_email_subject(debug)
     server = setup_email_server(EMAIL, APP_PASSWORD)
+    subject = get_email_subject(debug)
 
     for subscriber in subscribers:
         posts = get_relevant_posts(post_map, subscriber)
@@ -77,6 +77,33 @@ def main(debug):
         send_email(server, EMAIL, FROM_NAME, subscriber.email, subject, body)
 
     server.quit()
+
+
+def subscribers_for_now(debug):
+    """Collect subscribers with send_hour set to current time."""
+    if debug:
+        return Subscriber.objects.filter(email=EMAIL)
+    now = datetime.now(tz=timezone('US/Pacific'))
+    return Subscriber.objects.filter(send_hour=now.hour)
+
+
+def create_post_map(subreddit_names, limit):
+    """Create mapping of top posts to their subreddit names."""
+    reddit = praw.Reddit(user_agent=USER_AGENT)
+    post_map = dict.fromkeys(subreddit_names)
+    for name in post_map:
+        subreddit = reddit.get_subreddit(name)
+        new_posts = subreddit.get_top_from_day(limit=limit)
+        new_posts = fix_image_links(new_posts)
+        post_map[name] = list(new_posts)
+    return post_map
+
+
+def get_relevant_posts(post_map, subscriber):
+    """Filter only those posts selected by the current subscriber."""
+    for subreddit_name in subscriber.subreddit_names():
+        for post in post_map[subreddit_name]:
+            yield post
 
 
 def dedupe_posts(posts):
@@ -122,27 +149,6 @@ def find_source_link(link):
     return img.attrs['src']
 
 
-def get_email_subject(debug):
-    """Format today's date into the email subject."""
-    debug = 'DEBUG ' * debug
-    today = date.today()
-    day_name = calendar.day_name[today.weekday()]
-    month_name = calendar.month_name[today.month]
-    today_date_str = '{d}, {m} {i} {y}'.format(
-        d=day_name,
-        m=month_name,
-        i=today.day,
-        y=today.year,
-    )
-    return EMAIL_SUBJECT_TEMPLATE.format(debug=debug, date=today_date_str)
-
-
-def get_email_body(posts):
-    """Format posts into HTML."""
-    posts = htmlize_posts(posts)
-    return '<html>{}</html>'.format('<br>'.join(posts))
-
-
 def htmlize_posts(posts):
     """Generate each link as an html-ized image element."""
     for post in posts:
@@ -166,12 +172,25 @@ def htmlize_posts(posts):
         )
 
 
-def subscribers_for_now(debug):
-    """Collect subscribers with send_hour set to current time."""
-    if debug:
-        return Subscriber.objects.filter(email=EMAIL)
-    now = datetime.now(tz=timezone('US/Pacific'))
-    return Subscriber.objects.filter(send_hour=now.hour)
+def get_email_body(posts):
+    """Format posts into HTML."""
+    posts = htmlize_posts(posts)
+    return '<html>{}</html>'.format('<br>'.join(posts))
+
+
+def get_email_subject(debug):
+    """Format today's date into the email subject."""
+    debug = 'DEBUG ' * debug
+    today = date.today()
+    day_name = calendar.day_name[today.weekday()]
+    month_name = calendar.month_name[today.month]
+    today_date_str = '{d}, {m} {i} {y}'.format(
+        d=day_name,
+        m=month_name,
+        i=today.day,
+        y=today.year,
+    )
+    return EMAIL_SUBJECT_TEMPLATE.format(debug=debug, date=today_date_str)
 
 
 def setup_email_server(email, password):
@@ -193,26 +212,6 @@ def send_email(server, from_addr, from_name, to_addr, subject, body):
     msg['To'] = to_addr
     server.sendmail(from_addr, to_addr, msg.as_string())
     print('Email send to {}'.format(to_addr))
-
-
-def create_post_map(subreddit_names, limit):
-    """Create mapping of top posts to their subreddit names."""
-    reddit = praw.Reddit(user_agent=USER_AGENT)
-    post_map = dict.fromkeys(subreddit_names)
-    for name in post_map:
-        subreddit = reddit.get_subreddit(name)
-        new_posts = subreddit.get_top_from_day(limit=limit)
-        new_posts = fix_image_links(new_posts)
-        post_map[name] = list(new_posts)
-    return post_map
-
-
-def get_relevant_posts(post_map, subscriber):
-    """Filter only those posts selected by the current subscriber."""
-    for subreddit_name in subscriber.subreddit_names():
-        for post in post_map[subreddit_name]:
-            yield post
-
 
 
 if __name__ == '__main__':
