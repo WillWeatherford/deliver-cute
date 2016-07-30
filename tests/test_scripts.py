@@ -24,6 +24,12 @@ except NameError:
 # TODO
 # test unicode status of incoming PRAW post objects
 # test encoding of outgoing email
+# edge cases:
+#   no subscribers
+#   no subreddits
+#   no posts
+#   bad links
+
 
 CUTE_POSTS = []
 FIXED_LINKS = list(fix_image_links(CUTE_POSTS))
