@@ -55,15 +55,28 @@ YT_PAT = re.compile(r'.*(youtu\.be|youtube\.com).*')
 SRC_PAT = re.compile(r'http(s)?://i\.(imgur|reddituploads|redd).*\.[a-z]{3,4}')
 
 
-def gather_posts(subreddit_names, limit):
-    """Generate image urls from top links in cute subs, sorted by score."""
-    reddit = praw.Reddit(user_agent=USER_AGENT)
-    subreddits = (reddit.get_subreddit(name) for name in subreddit_names)
-    posts = chain(*(sub.get_top_from_day(limit=limit) for sub in subreddits))
-    for post in posts:
-        print('sub: {} url: {}; score: {}'
-              ''.format(post.subreddit, post.url, post.score))
-        yield post
+def main(debug):
+    """Gather then email top cute links."""
+    subscribers = subscribers_for_now(debug)
+    if not subscribers:
+        now = datetime.now(tz=timezone('US/Pacific'))
+        print('No subscribers want cute delivered at {}'.format(now.hour))
+        return
+
+    subreddit_names = chain(*(s.subreddit_names() for s in subscribers))
+    post_map = create_post_map(subreddit_names, LIMIT)
+
+    subject = get_email_subject(debug)
+    server = setup_email_server(EMAIL, APP_PASSWORD)
+
+    for subscriber in subscribers:
+        posts = get_relevant_posts(post_map, subscriber)
+        posts = dedupe_posts(posts)
+        posts = sorted(posts, key=attrgetter('score'), reverse=True)
+        body = get_email_body(posts)
+        send_email(server, EMAIL, FROM_NAME, subscriber.email, subject, body)
+
+    server.quit()
 
 
 def dedupe_posts(posts):
@@ -201,28 +214,6 @@ def get_relevant_posts(post_map, subscriber):
             yield post
 
 
-def main(debug):
-    """Gather then email top cute links."""
-    subscribers = subscribers_for_now(debug)
-    if not subscribers:
-        now = datetime.now(tz=timezone('US/Pacific'))
-        print('No subscribers want cute delivered at {}'.format(now.hour))
-        return
-
-    subreddit_names = chain(*(s.subreddit_names() for s in subscribers))
-    post_map = create_post_map(subreddit_names, LIMIT)
-
-    subject = get_email_subject(debug)
-    server = setup_email_server(EMAIL, APP_PASSWORD)
-
-    for subscriber in subscribers:
-        posts = get_relevant_posts(post_map, subscriber)
-        posts = dedupe_posts(posts)
-        posts = sorted(posts, key=attrgetter('score'), reverse=True)
-        body = get_email_body(posts)
-        send_email(server, EMAIL, FROM_NAME, subscriber.email, subject, body)
-
-    server.quit()
 
 if __name__ == '__main__':
     try:

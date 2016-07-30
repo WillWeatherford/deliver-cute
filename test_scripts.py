@@ -13,7 +13,8 @@ from nose_parameterized import parameterized
 
 # TODO
 # test htmlization
-# test unicode status
+# Fake post factory
+# test unicode status of incoming PRAW post objects
 
 CUTE_POSTS = []
 FIXED_LINKS = list(fix_image_links(CUTE_POSTS))
