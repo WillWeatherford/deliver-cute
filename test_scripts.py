@@ -2,10 +2,10 @@
 
 import pytest
 import random
-import factory
+from faker import Faker
 from string import ascii_letters, digits
 from itertools import product
-from on_schedule import fix_image_links, SRC_PAT
+from on_schedule import fix_image_links
 from constants import SUBREDDIT_NAMES, LIMIT, EMAIL
 from django.test import TestCase
 from nose_parameterized import parameterized
@@ -45,13 +45,35 @@ GOOD_URLS = product(PROTO, DOMAIN, HASH, EXT)
 BAD_URLS = product(PROTO, BAD_DOMAIN, HASH, BAD_EXT)
 
 
-class PostFactory(factory.Factory):
+class FakePRAWsubreddit(object):
     """Create fake post objects."""
 
-    subreddit = factory.Faker('pystr', min_chars=10, max_chars=20)
-    title = factory.Faker('sentence')
-    url = factory.Faker('url')
-    permalink = factory.Faker('url')
+    display_name = ''
+
+
+class FakePost(object):
+    """Create fake post objects."""
+
+    def __init__(self):
+        """Initialize the post with forced unicode strings."""
+        fake = Faker()
+        self.subreddit = FakePRAWsubreddit()
+        self.subreddit.display_name = fake.pystr(min_chars=8, max_chars=8)
+        self.title = fake.sentence()
+        self.url = fake.url()
+        self.permalink = fake.url()
+        try:
+            self.subreddit.display_name = unicode(self.subreddit.display_name)
+            self.title = unicode(self.title)
+            self.url = unicode(self.url)
+            self.permalink = unicode(self.permalink)
+        except NameError:
+            pass
+
+    @classmethod
+    def create_batch(cls, size):
+        """Return a list of FakePosts of length equal to given size."""
+        return [cls() for _ in range(size)]
 
 
 class DebugCase(TestCase):
@@ -74,7 +96,7 @@ class FakePostsCase(TestCase):
 
     def setUp(self):
         """Create a new batch of fake Posts."""
-        self.posts = PostFactory.create_batch(20)
+        self.posts = FakePost.create_batch(20)
 
     def test_htmlize(self):
         """Test that htmlize runs without breaking."""
