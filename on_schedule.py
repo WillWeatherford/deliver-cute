@@ -161,6 +161,7 @@ def htmlize_posts(posts):
             title = post.title
             url = post.url
             permalink = post.permalink
+        # import pdb; pdb.set_trace()
         yield PIC_TEMPLATE.format(
             permalink=escape(permalink),
             url=escape(url),

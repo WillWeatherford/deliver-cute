@@ -45,6 +45,15 @@ GOOD_URLS = product(PROTO, DOMAIN, HASH, EXT)
 BAD_URLS = product(PROTO, BAD_DOMAIN, HASH, BAD_EXT)
 
 
+class PostFactory(factory.Factory):
+    """Create fake post objects."""
+
+    subreddit = factory.Faker('pystr', min_chars=10, max_chars=20)
+    title = factory.Faker('sentence')
+    url = factory.Faker('url')
+    permalink = factory.Faker('url')
+
+
 class DebugCase(TestCase):
     """Run full on_schedule script in debug mode."""
 
@@ -58,6 +67,20 @@ class DebugCase(TestCase):
         """Test the main() function of on_schedule.py in debug mode."""
         from on_schedule import main
         self.assertEqual(main(True), 1)
+
+
+class FakePostsCase(TestCase):
+    """Using fake posts to test unicode and html escaping."""
+
+    def setUp(self):
+        """Create a new batch of fake Posts."""
+        self.posts = PostFactory.create_batch(20)
+
+    def test_htmlize(self):
+        """Test that htmlize runs without breaking."""
+        from on_schedule import htmlize_posts
+        for post in htmlize_posts(self.posts):
+            self.assertTrue(post)
 
 
 class RedditAPICase(TestCase):
