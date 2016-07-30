@@ -1,5 +1,5 @@
 """Test functions for deliver_cute project."""
-
+from __future__ import unicode_literals
 import pytest
 import random
 from faker import Faker

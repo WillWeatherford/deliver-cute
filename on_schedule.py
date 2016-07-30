@@ -5,6 +5,7 @@ Cuteness Delivery System.
 This program requests the top links from various subreddits of cute animals
 and email them to participants.
 """
+from __future__ import unicode_literals
 try:
     from html import escape
     print('Python 3: using html.escape()')
