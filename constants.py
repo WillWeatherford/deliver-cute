@@ -13,6 +13,7 @@ SUBREDDIT_NAMES = [
     'AnimalsBeingBros',
     'aww',
     'rarepuppers',
+    'redpandas',
 ]
 
 LIMIT = 10

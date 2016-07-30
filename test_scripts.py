@@ -5,7 +5,7 @@ import random
 import factory
 from string import ascii_letters, digits
 from itertools import product
-from on_schedule import gather_posts, fix_image_links, SRC_PAT
+from on_schedule import fix_image_links, SRC_PAT
 from constants import SUBREDDIT_NAMES, LIMIT
 from django.test import TestCase
 # from subscribers.models import Subscriber, SubReddit
@@ -46,7 +46,7 @@ class RedditAPICase(TestCase):
 
     def setUp(self):
         """Get post data to test."""
-        self.posts = list(gather_posts(SUBREDDIT_NAMES, LIMIT))
+
 
 
 class CheckURLCase(TestCase):
