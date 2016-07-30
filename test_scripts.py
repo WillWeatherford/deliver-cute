@@ -62,13 +62,13 @@ class FakePost(object):
         self.title = fake.sentence()
         self.url = fake.url()
         self.permalink = fake.url()
-        try:
-            self.subreddit.display_name = unicode(self.subreddit.display_name)
-            self.title = unicode(self.title)
-            self.url = unicode(self.url)
-            self.permalink = unicode(self.permalink)
-        except NameError:
-            pass
+        # try:
+        #     self.subreddit.display_name = unicode(self.subreddit.display_name)
+        #     self.title = unicode(self.title)
+        #     self.url = unicode(self.url)
+        #     self.permalink = unicode(self.permalink)
+        # except NameError:
+        #     pass
 
     @classmethod
     def create_batch(cls, size):
@@ -97,6 +97,17 @@ class FakePostsCase(TestCase):
     def setUp(self):
         """Create a new batch of fake Posts."""
         self.posts = FakePost.create_batch(4)
+
+    def test_unicode(self):
+        """Ensure that all posts are unicode."""
+        for post in self.posts:
+            try:
+                self.assertIsInstance(post.title, unicode)
+                self.assertIsInstance(post.url, unicode)
+                self.assertIsInstance(post.permalink, unicode)
+                self.assertIsInstance(post.subreddit.display_name, unicode)
+            except NameError:
+                self.assertTrue(True)
 
     def test_htmlize(self):
         """Test that htmlize runs without breaking."""

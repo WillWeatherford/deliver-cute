@@ -152,7 +152,7 @@ def find_source_link(link):
 def htmlize_posts(posts):
     """Generate each link as an html-ized image element."""
     for post in posts:
-        import pdb; pdb.set_trace()
+        # import pdb; pdb.set_trace()
         # try:
         #     subreddit = post.subreddit.display_name.encode('utf-8', 'ignore')
         #     title = post.title.encode('utf-8', 'ignore')
