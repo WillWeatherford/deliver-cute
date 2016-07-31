@@ -8,6 +8,12 @@ import factory
 from subscribers.models import Subscriber, SubReddit
 from constants import SUBREDDIT_NAMES
 
+BATCH_SIZE = 20
+BATCH_PARAMS = [(i, ) for i in range(BATCH_SIZE)]
+
+SUBR_BATCH_SIZE = len(SUBREDDIT_NAMES)
+SUBR_PARAMS = [(i, ) for i in range(SUBR_BATCH_SIZE)]
+
 
 class SubRedditFactory(DjangoModelFactory):
     """Creates SubReddit models for testing."""

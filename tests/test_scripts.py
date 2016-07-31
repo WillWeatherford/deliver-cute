@@ -14,6 +14,10 @@ from tests.classes import (
     FakePost,
     SubscriberFactory,
     SubRedditFactory,
+    BATCH_SIZE,
+    SUBR_BATCH_SIZE,
+    BATCH_PARAMS,
+    SUBR_PARAMS,
 )
 
 try:
@@ -58,16 +62,6 @@ GOOD_URLS = product(PROTO, DOMAIN, HASH, EXT)
 BAD_URLS = product(PROTO, BAD_DOMAIN, HASH, BAD_EXT)
 
 
-FAKE_POSTS = FakePost.create_batch(20)
-HTMLIZED_POSTS = ((post, ) for post in htmlize_posts(FAKE_POSTS))
-FAKE_POST_ATTRS = (
-    (attr, ) for attr in chain(
-        *((p.title, p.url, p.permalink, p.subreddit.display_name)
-          for p in FAKE_POSTS)
-    )
-)
-
-
 class DebugCase(TestCase):
     """Run full on_schedule script in debug mode."""
 
@@ -86,15 +80,25 @@ class DebugCase(TestCase):
 class FakePostsCase(TestCase):
     """Using fake posts to test unicode and html escaping."""
 
-    @parameterized.expand(FAKE_POST_ATTRS)
-    def test_unicode(self, attr):
-        """Ensure that all posts are unicode."""
-        self.assertIsInstance(attr, UNICODE)
+    def setUp(self):
+        """Set up fake_posts."""
+        self.posts = FakePost.create_batch(BATCH_SIZE)
+        self.htmlized_posts = list(htmlize_posts(self.posts))
 
-    @parameterized.expand(HTMLIZED_POSTS)
-    def test_htmlize(self, post):
+    @parameterized.expand(BATCH_PARAMS)
+    def test_unicode(self, idx):
+        """Ensure that all FakePost attributes are unicode."""
+        p = self.posts[idx]
+        for attr in (p.title, p.url, p.permalink, p.subreddit.display_name):
+            self.assertIsInstance(attr, UNICODE)
+
+    @parameterized.expand(BATCH_PARAMS)
+    def test_htmlize(self, idx):
         """Test that htmlize runs without breaking."""
+        post = self.htmlized_posts[idx]
         self.assertIsInstance(post, UNICODE)
+
+    # test html escaping by checking for &quot etc.
 
 
 class RedditAPICase(TestCase):
