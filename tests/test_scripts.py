@@ -127,10 +127,7 @@ class FakePostsCase(TestCase):
         """Test that urls of deduped posts is equal to set of those urls."""
         from on_schedule import dedupe_posts
         deduped_urls = [post.url for post in dedupe_posts(self.duplicates)]
-        self.assertListEqual(
-            list(sorted(deduped_urls)),
-            list(sorted(set(deduped_urls)))
-        )
+        self.assertCountEqual(deduped_urls, set(deduped_urls))
 
     # test html escaping by checking for &quot etc.
 
