@@ -96,7 +96,7 @@ class RedditAPICase(TestCase):
     @parameterized.expand(SUBR_NAME_PARAMS)
     def test_cute_posts_count(self, name):
         """Test that number of links is at or under the limit per subreddit."""
-        self.assertLess(len(self.all_posts[name]), LIMIT)
+        self.assertLessEqual(len(self.all_posts[name]), LIMIT)
 
 
 class FakePostsCase(TestCase):
