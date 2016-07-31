@@ -17,6 +17,7 @@ from tests.classes import (
     BATCH_PARAMS,
     # SUBR_BATCH_SIZE,
     # SUBR_PARAMS,
+    SUBR_NAME_PARAMS,
 )
 
 try:
@@ -29,6 +30,11 @@ except NameError:
 # TODO
 # test unicode status of incoming PRAW post objects
 # test encoding of outgoing email
+#   test fix_urls
+#       make some bad urls
+#   test sort_urls
+#   test subscribers_for_now
+
 # edge cases:
 #   no subscribers
 #   no subreddits
@@ -81,6 +87,17 @@ class RedditAPICase(TestCase):
         """Confirm that given subreddits returns a dictionary."""
         self.assertIsInstance(self.all_posts, dict)
 
+    @parameterized.expand(SUBR_NAME_PARAMS)
+    def test_cute_posts(self, name):
+        """Test that gathered posts have links."""
+        for post in self.all_posts[name]:
+            self.assertTrue(post.url.startswith('http'))
+
+    @parameterized.expand(SUBR_NAME_PARAMS)
+    def test_cute_posts_count(self, name):
+        """Test that number of links is at or under the limit per subreddit."""
+        self.assertLess(len(self.all_posts[name]), LIMIT)
+
 
 class FakePostsCase(TestCase):
     """Using fake posts to test unicode and html escaping."""
@@ -90,6 +107,7 @@ class FakePostsCase(TestCase):
         from on_schedule import htmlize_posts
         self.posts = FakePost.create_batch(BATCH_SIZE)
         self.htmlized_posts = list(htmlize_posts(self.posts))
+        self.duplicates = FakePost.create_batch_with_dupes(BATCH_SIZE)
 
     @parameterized.expand(BATCH_PARAMS)
     def test_unicode(self, idx):
@@ -103,6 +121,15 @@ class FakePostsCase(TestCase):
         """Test that htmlize runs without breaking."""
         post = self.htmlized_posts[idx]
         self.assertIsInstance(post, UNICODE)
+
+    def test_dedupe_posts(self):
+        """Test that urls of deduped posts is equal to set of those urls."""
+        from on_schedule import dedupe_posts
+        deduped_urls = [post.url for post in dedupe_posts(self.duplicates)]
+        self.assertListEqual(
+            list(sorted(deduped_urls)),
+            list(sorted(set(deduped_urls)))
+        )
 
     # test html escaping by checking for &quot etc.
 
@@ -135,7 +162,7 @@ class CheckURLCase(TestCase):
 #     """Generate link fixed by having correct source url."""
 #     return request.param
 
-
+#
 # def test_emai():
 #     """Test sending an email."""
 #     from on_schedule import send_email
@@ -154,26 +181,6 @@ class CheckURLCase(TestCase):
 #     moonmoon_post = reddit.get_submission(submission_id='4spncq')
 #     body = '<html>' + next(htmlize_posts((moonmoon_post, ))) + '</html>'
 #     send_email(WILL_EMAIL, WILL_EMAIL, [WILL_EMAIL], 'ESCAPE TEST', body)
-
-
-# def test_cute_posts(cute_post):
-#     """Test generating links."""
-#     assert cute_post.url.startswith('http')
-
-
-# def test_cute_posts_count():
-#     """Test that number of links is at or under the limit per subreddit."""
-#     assert len(CUTE_POSTS) <= len(SUBREDDIT_NAMES) * LIMIT
-
-
-# def test_cute_posts_dupes():
-#     """Test that number of links is at or under the limit per subreddit."""
-#     from on_schedule import dedupe_posts
-#     duplicated_posts = CUTE_POSTS + CUTE_POSTS
-#     deduplicated_urls = [post.url for post in dedupe_posts(duplicated_posts)]
-#     deduplicated_urls = list(sorted(deduplicated_urls))
-#     urls = list(sorted(set(post.url for post in CUTE_POSTS)))
-#     assert deduplicated_urls == urls
 
 
 class DebugCase(TestCase):

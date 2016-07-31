@@ -13,6 +13,7 @@ BATCH_PARAMS = [(i, ) for i in range(BATCH_SIZE)]
 
 SUBR_BATCH_SIZE = len(SUBREDDIT_NAMES)
 SUBR_PARAMS = [(i, ) for i in range(SUBR_BATCH_SIZE)]
+SUBR_NAME_PARAMS = [(name, ) for name in SUBREDDIT_NAMES]
 
 
 class SubRedditFactory(DjangoModelFactory):
@@ -53,17 +54,27 @@ class FakePRAWsubreddit(object):
 class FakePost(object):
     """Create fake post objects."""
 
-    def __init__(self):
+    def __init__(self, url=None):
         """Initialize the post with forced unicode strings."""
         fake = Faker()
         self.subreddit = FakePRAWsubreddit()
         self.subreddit.display_name = fake.pystr(min_chars=8, max_chars=8)
         # Need more thorough unicode character range
         self.title = u'\u2018' + fake.sentence() + u'\u2019'
-        self.url = fake.url()
+        self.url = url or fake.url()
         self.permalink = fake.url()
 
     @classmethod
     def create_batch(cls, size):
         """Return a list of FakePosts of length equal to given size."""
         return [cls() for _ in range(size)]
+
+    @classmethod
+    def create_batch_with_dupes(cls, size):
+        """Return a list of FakePosts with some duplicates of given size."""
+        if size < 2:
+            raise ValueError('Batch with dupes must be at least size 2.')
+        batch = [cls() for _ in range(size // 2)]
+        while len(batch) < size:
+            batch.append(cls(url=random.choice(batch).url))
+        return batch
