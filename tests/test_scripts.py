@@ -1,15 +1,17 @@
 """Test functions for deliver_cute project."""
-from __future__ import unicode_literals
+from __future__ import unicode_literals, absolute_import
+
 import pytest
 import random
-from faker import Faker
 from string import ascii_letters, digits
 from itertools import product, chain
-from on_schedule import fix_image_links, htmlize_posts
-from constants import SUBREDDIT_NAMES, LIMIT, EMAIL
 from django.test import TestCase
 from nose_parameterized import parameterized
-from subscribers.tests import (
+
+from on_schedule import fix_image_links, htmlize_posts
+from constants import SUBREDDIT_NAMES, LIMIT, EMAIL
+from tests.classes import (
+    FakePost,
     SubscriberFactory,
     SubRedditFactory,
 )
@@ -54,31 +56,6 @@ BAD_EXT = ('', )
 
 GOOD_URLS = product(PROTO, DOMAIN, HASH, EXT)
 BAD_URLS = product(PROTO, BAD_DOMAIN, HASH, BAD_EXT)
-
-
-class FakePRAWsubreddit(object):
-    """Create fake post objects."""
-
-    display_name = ''
-
-
-class FakePost(object):
-    """Create fake post objects."""
-
-    def __init__(self):
-        """Initialize the post with forced unicode strings."""
-        fake = Faker()
-        self.subreddit = FakePRAWsubreddit()
-        self.subreddit.display_name = fake.pystr(min_chars=8, max_chars=8)
-        # Need more thorough unicode character range
-        self.title = u'\u2018' + fake.sentence() + u'\u2019'
-        self.url = fake.url()
-        self.permalink = fake.url()
-
-    @classmethod
-    def create_batch(cls, size):
-        """Return a list of FakePosts of length equal to given size."""
-        return [cls() for _ in range(size)]
 
 
 FAKE_POSTS = FakePost.create_batch(20)

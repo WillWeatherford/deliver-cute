@@ -5,7 +5,7 @@ Cuteness Delivery System.
 This program requests the top links from various subreddits of cute animals
 and email them to participants.
 """
-from __future__ import unicode_literals
+from __future__ import unicode_literals, absolute_import
 try:
     from html import escape
     print('Python 3: using html.escape()')
@@ -152,13 +152,6 @@ def find_source_link(link):
 def htmlize_posts(posts):
     """Generate each link as an html-ized image element."""
     for post in posts:
-        # import pdb; pdb.set_trace()
-        # try:
-        #     subreddit = post.subreddit.display_name.encode('utf-8', 'ignore')
-        #     title = post.title.encode('utf-8', 'ignore')
-        #     url = post.url.encode('utf-8', 'ignore')
-        #     permalink = post.permalink.encode('utf-8', 'ignore')
-        # except AttributeError:
         subreddit = post.subreddit.display_name
         title = post.title
         url = post.url
@@ -181,7 +174,6 @@ def get_email_body(posts):
 
 def get_email_subject(debug):
     """Format today's date into the email subject."""
-    debug = 'DEBUG ' * debug
     today = date.today()
     day_name = calendar.day_name[today.weekday()]
     month_name = calendar.month_name[today.month]
@@ -191,7 +183,9 @@ def get_email_subject(debug):
         i=today.day,
         y=today.year,
     )
-    return EMAIL_SUBJECT_TEMPLATE.format(debug=debug, date=today_date_str)
+    return EMAIL_SUBJECT_TEMPLATE.format(
+        debug='DEBUG ' * debug,
+        date=today_date_str)
 
 
 def setup_email_server(email, password):

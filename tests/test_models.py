@@ -1,48 +1,19 @@
 """Testing Subscriber and SubReddit models."""
+from __future__ import unicode_literals, absolute_import
 
-from constants import SUBREDDIT_NAMES
-from django.test import TestCase
-from .models import Subscriber, SubReddit
-from factory.django import DjangoModelFactory
-import factory
 import random
-
+from django.test import TestCase
 from nose_parameterized import parameterized
+
+from subscribers.models import Subscriber, SubReddit
+from constants import SUBREDDIT_NAMES
+from tests.classes import SubRedditFactory, SubscriberFactory
 
 SUBR_BATCH_SIZE = len(SUBREDDIT_NAMES)
 SUBS_BATCH_SIZE = 20
 
 SUBR_PARAMS = [(i, ) for i in range(SUBR_BATCH_SIZE)]
 SUBS_PARAMS = [(i, ) for i in range(SUBS_BATCH_SIZE)]
-
-
-class SubRedditFactory(DjangoModelFactory):
-    """Creates SubReddit models for testing."""
-
-    class Meta:
-        """Assign SubReddit model as product of factory."""
-
-        model = SubReddit
-
-    display_name = factory.Iterator(SUBREDDIT_NAMES)
-
-    @classmethod
-    def create_batch(cls, **kwargs):
-        """Constant batch size of all subreddits."""
-        return super(SubRedditFactory, cls).create_batch(
-            SUBR_BATCH_SIZE, **kwargs)
-
-
-class SubscriberFactory(DjangoModelFactory):
-    """Creates Subscriber models for testing."""
-
-    class Meta:
-        """Assign Subscriber model as product of factory."""
-
-        model = Subscriber
-
-    email = factory.Faker('email')
-    send_hour = random.randrange(24)
 
 
 class SimpleCase(TestCase):
