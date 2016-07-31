@@ -88,7 +88,7 @@ def subscribers_for_now(debug):
 
 
 def create_post_map(subreddit_names, limit):
-    """Create mapping of top posts to their subreddit names."""
+    """Return dictionary with keys of subreddit names at given post limit."""
     reddit = praw.Reddit(user_agent=USER_AGENT)
     post_map = dict.fromkeys(subreddit_names)
     for name in post_map:

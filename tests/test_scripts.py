@@ -1,23 +1,22 @@
 """Test functions for deliver_cute project."""
 from __future__ import unicode_literals, absolute_import
 
-import pytest
 import random
 from string import ascii_letters, digits
-from itertools import product, chain
+from itertools import product
 from django.test import TestCase
 from nose_parameterized import parameterized
 
-from on_schedule import fix_image_links, htmlize_posts
+from on_schedule import fix_image_links
 from constants import SUBREDDIT_NAMES, LIMIT, EMAIL
 from tests.classes import (
     FakePost,
     SubscriberFactory,
     SubRedditFactory,
     BATCH_SIZE,
-    SUBR_BATCH_SIZE,
     BATCH_PARAMS,
-    SUBR_PARAMS,
+    # SUBR_BATCH_SIZE,
+    # SUBR_PARAMS,
 )
 
 try:
@@ -35,6 +34,8 @@ except NameError:
 #   no subreddits
 #   no posts
 #   bad links
+#   limit 0
+#   very high limit
 
 
 CUTE_POSTS = []
@@ -62,19 +63,23 @@ GOOD_URLS = product(PROTO, DOMAIN, HASH, EXT)
 BAD_URLS = product(PROTO, BAD_DOMAIN, HASH, BAD_EXT)
 
 
-class DebugCase(TestCase):
-    """Run full on_schedule script in debug mode."""
+class RedditAPICase(TestCase):
+    """Test retrieval of posts from reddit API."""
 
     def setUp(self):
-        """Add debug user with project email to test database."""
-        self.subreddits = SubRedditFactory.create_batch()
-        self.subscriber = SubscriberFactory.create(email=EMAIL)
-        self.subscriber.subreddits.add(*self.subreddits)
+        """Get post data to test."""
+        from on_schedule import create_post_map
+        # test with different limits
+        self.no_posts = create_post_map([], LIMIT)
+        self.all_posts = create_post_map(SUBREDDIT_NAMES, LIMIT)
 
-    def test_main(self):
-        """Test the main() function of on_schedule.py in debug mode."""
-        from on_schedule import main
-        self.assertEqual(main(True), 1)
+    def test_no_subreddits(self):
+        """Confirm that zero subreddits returns an empty dictionary."""
+        self.assertEqual(self.no_posts, {})
+
+    def test_dictionary(self):
+        """Confirm that given subreddits returns a dictionary."""
+        self.assertIsInstance(self.all_posts, dict)
 
 
 class FakePostsCase(TestCase):
@@ -82,6 +87,7 @@ class FakePostsCase(TestCase):
 
     def setUp(self):
         """Set up fake_posts."""
+        from on_schedule import htmlize_posts
         self.posts = FakePost.create_batch(BATCH_SIZE)
         self.htmlized_posts = list(htmlize_posts(self.posts))
 
@@ -99,13 +105,6 @@ class FakePostsCase(TestCase):
         self.assertIsInstance(post, UNICODE)
 
     # test html escaping by checking for &quot etc.
-
-
-class RedditAPICase(TestCase):
-    """Test retrieval of posts from reddit API."""
-
-    def setUp(self):
-        """Get post data to test."""
 
 
 class CheckURLCase(TestCase):
@@ -129,12 +128,6 @@ class CheckURLCase(TestCase):
     # def test_cute_links_source(fixed_link):
     #     """Confirm that links fixed by source fixer match the expected pattern."""
     #     assert self.regex.match(fixed_link.url) is not None
-
-
-# @pytest.fixture(params=CUTE_POSTS)
-# def cute_post(request):
-#     """Generate cute links directly from source."""
-#     return request.param
 
 
 # @pytest.fixture(params=FIXED_LINKS)
@@ -183,4 +176,17 @@ class CheckURLCase(TestCase):
 #     assert deduplicated_urls == urls
 
 
+class DebugCase(TestCase):
+    """Run full on_schedule script in debug mode."""
+
+    def setUp(self):
+        """Add debug user with project email to test database."""
+        self.subreddits = SubRedditFactory.create_batch()
+        self.subscriber = SubscriberFactory.create(email=EMAIL)
+        self.subscriber.subreddits.add(*self.subreddits)
+
+    def test_main(self):
+        """Test the main() function of on_schedule.py in debug mode."""
+        from on_schedule import main
+        self.assertEqual(main(True), 1)
 
