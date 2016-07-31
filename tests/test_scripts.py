@@ -72,7 +72,7 @@ class DebugCase(TestCase):
     """Run full on_schedule script in debug mode."""
 
     def setUp(self):
-        """Setup debug user with project email."""
+        """Add debug user with project email to test database."""
         self.subreddits = SubRedditFactory.create_batch()
         self.subscriber = SubscriberFactory.create(email=EMAIL)
         self.subscriber.subreddits.add(*self.subreddits)
