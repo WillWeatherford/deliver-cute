@@ -69,8 +69,9 @@ def main(debug):
     sent_count = 0
     for subscriber in subscribers:
         posts = get_relevant_posts(post_map, subscriber)
+        posts = fix_image_links(posts)
         posts = dedupe_posts(posts)
-        posts = sorted(posts, key=attrgetter('score'), reverse=True)
+        posts = sort_posts(posts)
         body = get_email_body(posts)
         send_email(server, EMAIL, FROM_NAME, subscriber.email, subject, body)
         sent_count += 1
@@ -94,7 +95,6 @@ def create_post_map(subreddit_names, limit):
     for name in post_map:
         subreddit = reddit.get_subreddit(name)
         new_posts = subreddit.get_top_from_day(limit=limit)
-        new_posts = fix_image_links(new_posts)
         post_map[name] = list(new_posts)
     return post_map
 
@@ -107,7 +107,7 @@ def get_relevant_posts(post_map, subscriber):
 
 
 def dedupe_posts(posts):
-    """Remove duplicate posts."""
+    """Generate posts where duplicates have been removed by comparing url."""
     found_already = set()
     for post in posts:
         if post.url not in found_already:
@@ -115,6 +115,12 @@ def dedupe_posts(posts):
             found_already.add(post.url)
         else:
             print('Omitting duplicate {}'.format(post.url))
+
+
+def sort_posts(posts):
+    """Generate posts sorted by their upvote count."""
+    for post in sorted(posts, key=attrgetter('score'), reverse=True):
+        yield post
 
 
 def fix_image_links(posts):
