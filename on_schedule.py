@@ -72,6 +72,7 @@ def main(debug):
         posts = fix_image_links(posts)
         posts = dedupe_posts(posts)
         posts = sort_posts(posts)
+        posts = htmlize_posts(posts)
         body = get_email_body(posts)
         send_email(server, EMAIL, FROM_NAME, subscriber.email, subject, body)
         sent_count += 1
@@ -174,7 +175,6 @@ def htmlize_posts(posts):
 
 def get_email_body(posts):
     """Format posts into HTML."""
-    posts = htmlize_posts(posts)
     return '<html>{}</html>'.format('<br>'.join(posts))
 
 
