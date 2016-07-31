@@ -34,6 +34,7 @@ except NameError:
 #       make some bad urls
 #   test sort_urls
 #   test subscribers_for_now
+#   test email outbox
 
 # edge cases:
 #   no subscribers
