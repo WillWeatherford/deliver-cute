@@ -4,8 +4,8 @@ from __future__ import unicode_literals, absolute_import
 import random
 from faker import Faker
 from django.test import TestCase, Client
-from constants import SUBREDDIT_NAMES
-from tests.classes import SubRedditFactory
+from constants import SUBREDDIT_NAMES, EMAIL
+from tests.classes import SubRedditFactory, SubscriberFactory
 from subscribers.models import Subscriber
 
 # Load form.
@@ -22,7 +22,7 @@ from subscribers.models import Subscriber
 
 fake = Faker()
 HOME = '/'
-
+UNSUB = '/unsubscribe'
 GOOD_PARAMS = {
     'email': fake.email(),
     'send_hour': str(random.randrange(24)),
@@ -71,4 +71,13 @@ class AlreadySubscribedCase(TestCase):
     def setUp(self):
         """Establish client and responses."""
         self.subreddits = SubRedditFactory.create_batch()
+        self.subscriber = SubscriberFactory.create(email=EMAIL)
+        self.subscriber.subreddits.add(*self.subreddits)
         self.client = Client()
+
+    def test_unsubscribe(self):
+        """Check that user is deleted on unsubscriber."""
+        email = self.subscriber.email
+        response = self.client.get(UNSUB, {'email': email})
+        with self.assertRaises(Subscriber.DoesNotExist):
+            Subscriber.objects.get(email=email)
