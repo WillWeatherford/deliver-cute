@@ -26,10 +26,10 @@ HOME = '/'
 GOOD_PARAMS = {
     'email': fake.email(),
     'send_hour': str(random.randrange(24)),
-    'subreddits': [str(n) for n in random.sample(
-        range(1, len(SUBREDDIT_NAMES) + 1),
-        random.randrange(1, len(SUBREDDIT_NAMES) + 1)
-    )],
+    # 'subreddits': [str(n) for n in random.sample(
+    #     range(1, len(SUBREDDIT_NAMES) + 1),
+    #     random.randrange(1, len(SUBREDDIT_NAMES) + 1)
+    # )],
 }
 
 
@@ -40,7 +40,7 @@ class UnAuthCase(TestCase):
         """Establish client and responses."""
         self.subreddits = SubRedditFactory.create_batch()
         self.client = Client()
-        self.post_response = self.client.post(HOME, GOOD_PARAMS)
+        self.post_response = self.client.post(HOME, GOOD_PARAMS, follow=True)
 
     def test_get(self):
         """Test that front page/subscription form simply loads."""
@@ -52,6 +52,6 @@ class UnAuthCase(TestCase):
         self.assertEqual(self.post_response.status_code, 200)
         self.assertNotIn(b'This field is required', self.post_response.content)
         self.assertNotIn(b'Select a valid choice.', self.post_response.content)
-        import pdb;pdb.set_trace()
+        # import pdb;pdb.set_trace()
         new_subscriber = Subscriber.objects.get(email=GOOD_PARAMS['email'])
         self.assertTrue(new_subscriber.pk)
