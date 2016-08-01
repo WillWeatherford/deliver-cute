@@ -40,18 +40,26 @@ class UnAuthCase(TestCase):
         """Establish client and responses."""
         self.subreddits = SubRedditFactory.create_batch()
         self.client = Client()
-        self.post_response = self.client.post(HOME, GOOD_PARAMS, follow=True)
+        self.good_post = self.client.post(HOME, GOOD_PARAMS, follow=True)
 
     def test_get(self):
         """Test that front page/subscription form simply loads."""
         response = self.client.get(HOME)
         self.assertEqual(response.status_code, 200)
 
-    def test_post_good(self):
+    def test_good_200(self):
         """Test subscribers register properly in database with good params."""
-        self.assertEqual(self.post_response.status_code, 200)
-        self.assertNotIn(b'This field is required', self.post_response.content)
-        self.assertNotIn(b'Select a valid choice.', self.post_response.content)
-        # import pdb;pdb.set_trace()
+        self.assertEqual(self.good_post.status_code, 200)
+
+    def test_good_req_fields(self):
+        """Test that all required fields are filled in for good post."""
+        self.assertNotIn(b'This field is required', self.good_post.content)
+
+    def test_good_valid_input(self):
+        """Test that input data is valid for good post."""
+        self.assertNotIn(b'Select a valid choice.', self.good_post.content)
+
+    def test_good_add_row(self):
+        """Test that a new Subscriber has been entered into the database."""
         new_subscriber = Subscriber.objects.get(email=GOOD_PARAMS['email'])
         self.assertTrue(new_subscriber.pk)
