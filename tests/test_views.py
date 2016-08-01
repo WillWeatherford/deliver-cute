@@ -74,10 +74,14 @@ class AlreadySubscribedCase(TestCase):
         self.subscriber = SubscriberFactory.create(email=EMAIL)
         self.subscriber.subreddits.add(*self.subreddits)
         self.client = Client()
+        self.unsub_response = self.client.get(
+            UNSUB, {'email': self.subscriber.email})
+
+    def test_unsubscribe_status(self):
+        """Check that unsubscribe redirects to successful unsubscribe page."""
+        self.assertEqual(self.unsub_response.status_code, 200)
 
     def test_unsubscribe(self):
         """Check that user is deleted on unsubscriber."""
-        email = self.subscriber.email
-        response = self.client.get(UNSUB, {'email': email})
         with self.assertRaises(Subscriber.DoesNotExist):
-            Subscriber.objects.get(email=email)
+            Subscriber.objects.get(email=self.subscriber.email)
