@@ -63,3 +63,12 @@ class UnAuthCase(TestCase):
         """Test that a new Subscriber has been entered into the database."""
         new_subscriber = Subscriber.objects.get(email=GOOD_PARAMS['email'])
         self.assertTrue(new_subscriber.pk)
+
+
+class AlreadySubscribedCase(TestCase):
+    """Website use case where user is not logged in."""
+
+    def setUp(self):
+        """Establish client and responses."""
+        self.subreddits = SubRedditFactory.create_batch()
+        self.client = Client()
