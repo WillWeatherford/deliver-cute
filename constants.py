@@ -1,6 +1,7 @@
 """Hold constant values used in multiple places in project."""
 import os
 
+HOME = '/'
 EMAIL = os.environ['PROJECT_EMAIL']
 PASSWORD = os.environ['PROJECT_PASSWORD']
 APP_PASSWORD = os.environ['PROJECT_APP_PASSWORD']

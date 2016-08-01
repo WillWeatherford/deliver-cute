@@ -16,9 +16,10 @@ Including another URLconf
 
 from django.conf.urls import url
 from django.contrib import admin
-from .views import Main
+from .views import Main, Unsubcribe
 
 urlpatterns = [
     url(r'^admin/', admin.site.urls),
     url(r'^$', Main.as_view()),
+    url(r'^unsubscribe/(?P<pk>[0-9]+)/$', Unsubcribe.as_view())
 ]

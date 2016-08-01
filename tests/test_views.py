@@ -4,7 +4,7 @@ from __future__ import unicode_literals, absolute_import
 import random
 from faker import Faker
 from django.test import TestCase, Client
-from constants import SUBREDDIT_NAMES, EMAIL
+from constants import SUBREDDIT_NAMES, EMAIL, HOME
 from tests.classes import SubRedditFactory, SubscriberFactory
 from subscribers.models import Subscriber
 
@@ -21,7 +21,6 @@ from subscribers.models import Subscriber
 # Different params for POST
 
 fake = Faker()
-HOME = '/'
 UNSUB = '/unsubscribe'
 GOOD_PARAMS = {
     'email': fake.email(),
