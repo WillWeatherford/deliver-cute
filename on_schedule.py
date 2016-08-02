@@ -25,12 +25,13 @@ from itertools import chain
 from bs4 import BeautifulSoup
 from operator import attrgetter
 from datetime import date, datetime
-from email.mime.text import MIMEText
-from email.mime.multipart import MIMEMultipart
+# from email.mime.text import MIMEText
+# from email.mime.multipart import MIMEMultipart
 from constants import LIMIT, EMAIL, APP_PASSWORD
 django.setup()
 from subscribers.models import Subscriber
 from django.core.mail import send_mail
+from django.template.loader import render_to_string
 
 USER_AGENT = 'python:deliver_cute:v1.0 (by /u/____OOOO____)'
 
@@ -154,17 +155,17 @@ def htmlize_posts(posts):
     """Generate each link as an html-ized image element."""
     for post in posts:
         subreddit = post.subreddit.display_name
-        title = post.title
-        url = post.url
-        permalink = post.permalink
-        yield PIC_TEMPLATE.format(
-            permalink=escape(permalink),
-            url=escape(url),
-            title=escape(title),
-            subreddit_name=escape('/r/' + subreddit),
-            subreddit_url=escape('https://www.reddit.com/r/' + subreddit),
-            width=PIC_WIDTH,
-        )
+        context = {
+            'subreddit': subreddit,
+            'subreddit_name': '/r/' + subreddit,
+            'subreddit_url': 'https://www.reddit.com/r/' + subreddit,
+            'title': post.title,
+            'url': post.url,
+            'permalink': post.permalink,
+            'width': PIC_WIDTH,
+        }
+
+        yield render_to_string('image.html', context=context)
 
 
 def get_email_body(posts):
