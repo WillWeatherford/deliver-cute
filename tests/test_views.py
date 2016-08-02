@@ -4,6 +4,7 @@ from __future__ import unicode_literals, absolute_import
 import random
 from faker import Faker
 from django.test import TestCase, Client
+from django.core.urlresolvers import reverse
 from constants import SUBREDDIT_NAMES, EMAIL, HOME
 from tests.classes import SubRedditFactory, SubscriberFactory
 from subscribers.models import Subscriber
@@ -21,7 +22,7 @@ from subscribers.models import Subscriber
 # Different params for POST
 
 fake = Faker()
-UNSUB = '/unsubscribe'
+UNSUB = '/unsubscribe/{pk}'
 GOOD_PARAMS = {
     'email': fake.email(),
     'send_hour': str(random.randrange(24)),
@@ -41,9 +42,14 @@ class UnAuthCase(TestCase):
         self.client = Client()
         self.good_post = self.client.post(HOME, GOOD_PARAMS, follow=True)
 
+    def tearDown(self):
+        """Delete all users to re-use good params."""
+        for subscriber in Subscriber.objects.all():
+            subscriber.delete()
+
     def test_get(self):
         """Test that front page/subscription form simply loads."""
-        response = self.client.get(HOME)
+        response = self.client.get(reverse('home'))
         self.assertEqual(response.status_code, 200)
 
     def test_good_200(self):
@@ -72,15 +78,25 @@ class AlreadySubscribedCase(TestCase):
         self.subreddits = SubRedditFactory.create_batch()
         self.subscriber = SubscriberFactory.create(email=EMAIL)
         self.subscriber.subreddits.add(*self.subreddits)
+        self.unsub_url = reverse('unsubscribe', args=(self.subscriber.pk, ))
         self.client = Client()
-        self.unsub_response = self.client.get(
-            UNSUB, {'email': self.subscriber.email})
+        self.unsub_get = self.client.get(self.unsub_url, follow=True)
+        self.unsub_post = self.client.post(self.unsub_url, follow=True)
+
+    def tearDown(self):
+        """Delete all users to re-use good params."""
+        for subscriber in Subscriber.objects.all():
+            subscriber.delete()
 
     def test_unsubscribe_status(self):
         """Check that unsubscribe redirects to successful unsubscribe page."""
-        self.assertEqual(self.unsub_response.status_code, 200)
+        self.assertEqual(self.unsub_get.status_code, 200)
 
-    def test_unsubscribe(self):
+    def test_unsubscribe_redirected(self):
+        """Check that user is redirected to front page on successful unsub."""
+        self.assertRedirects(self.unsub_post, reverse('home'), status_code=302)
+
+    def test_unsubscribe_deleted(self):
         """Check that user is deleted on unsubscriber."""
         with self.assertRaises(Subscriber.DoesNotExist):
-            Subscriber.objects.get(email=self.subscriber.email)
+            Subscriber.objects.get(pk=self.subscriber.pk)

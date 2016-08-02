@@ -1,10 +1,10 @@
 """Views for Deliver Cute website."""
 
-from constants import HOME
-from subscribers.models import Subscriber
-from subscribers.forms import SubscriberForm
 from django.views.generic import CreateView, DeleteView
 from django.http import HttpResponseRedirect
+# from django.core.urlresolvers import reverse
+from subscribers.models import Subscriber
+from subscribers.forms import SubscriberForm
 
 
 class Main(CreateView):
@@ -13,7 +13,7 @@ class Main(CreateView):
     template_name = 'main.html'
     model = Subscriber
     form_class = SubscriberForm
-    success_url = HOME
+    success_url = '/'
 
     def form_valid(self, form):
         """Create new Subscriber instance or update if already in database."""
@@ -32,5 +32,5 @@ class Main(CreateView):
 class Unsubcribe(DeleteView):
     """Prompt user to confirm they want to unsubscribe."""
 
-    success_url = HOME
+    success_url = '/'
     model = Subscriber

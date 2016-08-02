@@ -60,7 +60,7 @@ TEMPLATES = [
             os.path.join(BASE_DIR, 'delivercute', 'templates'),
             os.path.join(BASE_DIR, 'subscribers', 'templates'),
         ],
-        'APP_DIRS': False,
+        'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
                 'django.template.context_processors.debug',
