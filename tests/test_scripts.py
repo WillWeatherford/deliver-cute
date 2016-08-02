@@ -139,10 +139,18 @@ class FakePostsCase(TestCase):
             self.assertIsInstance(attr, UNICODE)
 
     @parameterized.expand(BATCH_PARAMS)
-    def test_htmlize(self, idx):
+    def test_htmlize_unicode(self, idx):
         """Test that htmlize runs without breaking."""
         post = self.htmlized_posts[idx]
         self.assertIsInstance(post, UNICODE)
+
+    @parameterized.expand(BATCH_PARAMS)
+    def test_contains(self, idx):
+        """Ensure that all FakePost attributes are unicode."""
+        p = self.posts[idx]
+        hp = self.htmlized_posts[idx]
+        for attr in (p.title, p.url, p.permalink, p.subreddit.display_name):
+            self.assertIn(attr, hp)
 
     def test_dedupe_posts(self):
         """Test that urls of deduped posts is equal to set of those urls."""
