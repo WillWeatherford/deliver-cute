@@ -25,29 +25,19 @@ from itertools import chain
 from bs4 import BeautifulSoup
 from operator import attrgetter
 from datetime import date, datetime
-from email.mime.text import MIMEText
-from email.mime.multipart import MIMEMultipart
+# from email.mime.text import MIMEText
+# from email.mime.multipart import MIMEMultipart
 from constants import LIMIT, EMAIL, APP_PASSWORD
 django.setup()
 from subscribers.models import Subscriber
 from django.core.mail import send_mail
+from django.template.loader import render_to_string
 
 USER_AGENT = 'python:deliver_cute:v1.0 (by /u/____OOOO____)'
 
 EMAIL_SUBJECT_TEMPLATE = '{debug}Cute Pics for {date}'
 FROM_NAME = 'Deliver Cute'
 PIC_WIDTH = '400'
-PIC_TEMPLATE = '''
-<p>
-  <p>
-    <a href={permalink}>{title}</a>
-    from <a href={subreddit_url}>{subreddit_name}</a>
-  </p>
-  <p>
-    <img src="{url}" style="width:{width}px" alt={title}>
-  </p>
-</p>
-'''
 
 YT_PAT = re.compile(r'.*(youtu\.be|youtube\.com).*')
 SRC_PAT = re.compile(r'http(s)?://i\.(imgur|reddituploads|redd).*\.[a-z]{3,4}')
@@ -74,7 +64,7 @@ def main(debug):
         posts = dedupe_posts(posts)
         posts = sort_posts(posts)
         posts = htmlize_posts(posts)
-        body = get_email_body(posts)
+        body = get_email_body(subscriber, posts)
         sent_count += send_mail(
             subject, 'DEBUG', EMAIL, [subscriber.email],
             html_message=body,
@@ -165,22 +155,22 @@ def htmlize_posts(posts):
     """Generate each link as an html-ized image element."""
     for post in posts:
         subreddit = post.subreddit.display_name
-        title = post.title
-        url = post.url
-        permalink = post.permalink
-        yield PIC_TEMPLATE.format(
-            permalink=escape(permalink),
-            url=escape(url),
-            title=escape(title),
-            subreddit_name=escape('/r/' + subreddit),
-            subreddit_url=escape('https://www.reddit.com/r/' + subreddit),
-            width=PIC_WIDTH,
-        )
+        context = {
+            'subreddit': subreddit,
+            'subreddit_name': '/r/' + subreddit,
+            'subreddit_url': 'https://www.reddit.com/r/' + subreddit,
+            'title': post.title,
+            'url': post.url,
+            'permalink': post.permalink,
+            'width': PIC_WIDTH,
+        }
+        yield render_to_string('image.html', context=context)
 
 
-def get_email_body(posts):
+def get_email_body(subscriber, posts):
     """Format posts into HTML."""
-    return '<html>{}</html>'.format('<br>'.join(posts))
+    context = {'posts': posts, 'subscriber': subscriber}
+    return render_to_string('daily_email.html', context=context)
 
 
 def get_email_subject(debug):
