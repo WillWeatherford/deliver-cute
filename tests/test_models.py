@@ -33,6 +33,10 @@ class SimpleCase(TestCase):
         """Test initialization of new Subreddit."""
         self.assertTrue(self.subreddit.pk)
 
+    def test_subreddit_unsub_hash(self):
+        """Test initialization of new Subreddit with an unsubscribe hash."""
+        self.assertTrue(self.subreddit.unsubscribe_id)
+
     def test_one_subscriber(self):
         """Test that one subscriber has been registered in the ORM."""
         self.assertEqual(Subscriber.objects.count(), 1)
