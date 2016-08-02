@@ -126,9 +126,10 @@ class FakePostsCase(TestCase):
 
     def setUp(self):
         """Set up fake_posts."""
-        from on_schedule import htmlize_posts
+        from on_schedule import htmlize_posts, get_email_body
         self.posts = FakePost.create_batch(BATCH_SIZE)
         self.htmlized_posts = list(htmlize_posts(self.posts))
+        self.email_body = get_email_body(self.htmlized_posts)
         self.duplicates = FakePost.create_batch_with_dupes(BATCH_SIZE)
 
     @parameterized.expand(BATCH_PARAMS)
@@ -145,12 +146,18 @@ class FakePostsCase(TestCase):
         self.assertIsInstance(post, UNICODE)
 
     @parameterized.expand(BATCH_PARAMS)
-    def test_contains(self, idx):
+    def test_html_post_contains(self, idx):
         """Ensure that all FakePost attributes are unicode."""
         p = self.posts[idx]
         hp = self.htmlized_posts[idx]
         for attr in (p.title, p.url, p.permalink, p.subreddit.display_name):
             self.assertIn(attr, hp)
+
+    @parameterized.expand(BATCH_PARAMS)
+    def test_html_body_contains(self, idx):
+        """Ensure that all FakePost attributes are unicode."""
+        hp = self.htmlized_posts[idx]
+        self.assertIn(hp, self.email_body)
 
     def test_dedupe_posts(self):
         """Test that urls of deduped posts is equal to set of those urls."""
