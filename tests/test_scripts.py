@@ -80,7 +80,6 @@ class EmailCase(TestCase):
             html_message=BODY,
             fail_silently=False,
         )
-        import pdb;pdb.set_trace()
 
     def test_outbox(self):
         """Test sending an email."""
@@ -225,3 +224,11 @@ class DebugCase(TestCase):
         """Test sending an email."""
         email = mail.outbox[0]
         self.assertEqual(self.subscriber.email, email.to[0])
+
+    def test_unsubscribe_link(self):
+        """Test sending an email."""
+        email = mail.outbox[0]
+        self.assertIn(
+            b'/unsubscribe/' + str(self.subscriber.pk).encode('ascii'),
+            email.alternatives,
+        )
