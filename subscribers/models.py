@@ -2,7 +2,7 @@
 from __future__ import unicode_literals, absolute_import
 from django.db import models as md
 from hashlib import md5
-from time import time
+from datetime import datetime
 try:
     UNICODE = unicode
     print('Python 2, using unicode class.')
@@ -13,7 +13,7 @@ except NameError:
 
 def _hash():
     """Generate a simple hash for default of unsubscribe_hash."""
-    now = UNICODE(time()).encode('ascii')
+    now = UNICODE(datetime.now()).encode('ascii')
     return md5(now).hexdigest()
 
 
