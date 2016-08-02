@@ -30,6 +30,7 @@ from email.mime.multipart import MIMEMultipart
 from constants import LIMIT, EMAIL, APP_PASSWORD
 django.setup()
 from subscribers.models import Subscriber
+from django.core.mail import send_email
 
 USER_AGENT = 'python:deliver_cute:v1.0 (by /u/____OOOO____)'
 

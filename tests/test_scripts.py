@@ -5,6 +5,7 @@ import random
 from string import ascii_letters, digits
 from itertools import product
 from django.test import TestCase
+from django.core import mail
 from nose_parameterized import parameterized
 
 from on_schedule import fix_image_links
@@ -47,9 +48,7 @@ except NameError:
 
 CUTE_POSTS = []
 FIXED_LINKS = list(fix_image_links(CUTE_POSTS))
-
-WILL_EMAIL = 'weatherford.william@gmail.com'
-SUBJECT = 'TEST EMAIL'
+SUBJECT = 'Debug'
 BODY = '''
 <html>
 <h1>Test Header</h1>
@@ -68,6 +67,16 @@ BAD_EXT = ('', )
 
 GOOD_URLS = product(PROTO, DOMAIN, HASH, EXT)
 BAD_URLS = product(PROTO, BAD_DOMAIN, HASH, BAD_EXT)
+
+
+class EmailCase(TestCase):
+    """Testing sending of email."""
+
+    def test_send_mail(self):
+        """Test sending an email."""
+        from on_schedule import send_email
+        send_email(SUBJECT, BODY, EMAIL, [EMAIL])
+        self.assertEqual(len(mail.outbox), 1)
 
 
 class RedditAPICase(TestCase):
@@ -158,16 +167,14 @@ class CheckURLCase(TestCase):
     #     assert self.regex.match(fixed_link.url) is not None
 
 
+
+
 # @pytest.fixture(params=FIXED_LINKS)
 # def fixed_link(request):
 #     """Generate link fixed by having correct source url."""
 #     return request.param
 
 #
-# def test_emai():
-#     """Test sending an email."""
-#     from on_schedule import send_email
-#     send_email(WILL_EMAIL, WILL_EMAIL, [WILL_EMAIL], SUBJECT, BODY)
 
 
 # def test_moonmoon():
