@@ -1,7 +1,20 @@
 """Subscriber model tracking preferences for each email."""
+from __future__ import unicode_literals, absolute_import
 from django.db import models as md
 from hashlib import md5
 from time import time
+try:
+    UNICODE = unicode
+    print('Python 2, using unicode class.')
+except NameError:
+    UNICODE = str
+    print('Python 3, using str class.')
+
+
+def _hash():
+    """Generate a simple hash for default of unsubscribe_hash."""
+    now = UNICODE(time()).encode('ascii')
+    return md5(now).hexdigest()
 
 
 def get_hour(n):
@@ -9,11 +22,6 @@ def get_hour(n):
     return (n, '{}:00 {}'.format(n % 12 or 12, 'AM' if n < 12 else 'PM'))
 
 HOUR_CHOICES = map(get_hour, range(24))
-
-
-def _hash():
-    """Generate a simple hash for default of unsubscribe_hash."""
-    return md5(str(time()).encode('ascii')).hexdigest()
 
 
 class Subscriber(md.Model):
