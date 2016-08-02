@@ -7,5 +7,6 @@ ALLOWED_HOSTS.extend(
      '.will-weatherford.com',
      ]
 )
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 STATIC_ROOT = os.path.join(BASE_DIR, 'static')
 STATICFILES_DIRS = ()

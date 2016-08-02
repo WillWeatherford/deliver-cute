@@ -30,7 +30,7 @@ from email.mime.multipart import MIMEMultipart
 from constants import LIMIT, EMAIL, APP_PASSWORD
 django.setup()
 from subscribers.models import Subscriber
-from django.core.mail import send_email
+from django.core.mail import send_mail
 
 USER_AGENT = 'python:deliver_cute:v1.0 (by /u/____OOOO____)'
 
@@ -64,7 +64,7 @@ def main(debug):
     subreddit_names = chain(*(s.subreddit_names() for s in subscribers))
     post_map = create_post_map(subreddit_names, LIMIT)
 
-    server = setup_email_server(EMAIL, APP_PASSWORD)
+    # server = setup_email_server(EMAIL, APP_PASSWORD)
     subject = get_email_subject(debug)
 
     sent_count = 0
@@ -75,10 +75,14 @@ def main(debug):
         posts = sort_posts(posts)
         posts = htmlize_posts(posts)
         body = get_email_body(posts)
-        send_email(server, EMAIL, FROM_NAME, subscriber.email, subject, body)
-        sent_count += 1
+        sent_count += send_mail(
+            subject, 'DEBUG', EMAIL, [subscriber.email],
+            html_message=body,
+            fail_silently=False,
+            # server, EMAIL, FROM_NAME, subscriber.email, subject, body
+        )
 
-    server.quit()
+    # server.quit()
     return sent_count
 
 
@@ -204,16 +208,16 @@ def setup_email_server(email, password):
     return server
 
 
-def send_email(server, from_addr, from_name, to_addr, subject, body):
-    """Send an email with given server and message info."""
-    html = MIMEText(body, 'html')
-    msg = MIMEMultipart('alternative')
-    msg.attach(html)
-    msg['Subject'] = subject
-    msg['From'] = from_name
-    msg['To'] = to_addr
-    server.sendmail(from_addr, to_addr, msg.as_string())
-    print('Email send to {}'.format(to_addr))
+# def send_email(server, from_addr, from_name, to_addr, subject, body):
+#     """Send an email with given server and message info."""
+#     html = MIMEText(body, 'html')
+#     msg = MIMEMultipart('alternative')
+#     msg.attach(html)
+#     msg['Subject'] = subject
+#     msg['From'] = from_name
+#     msg['To'] = to_addr
+#     server.sendmail(from_addr, to_addr, msg.as_string())
+#     print('Email send to {}'.format(to_addr))
 
 
 if __name__ == '__main__':
@@ -222,4 +226,4 @@ if __name__ == '__main__':
     except IndexError:
         debug = False
     print('Debug is {}'.format(debug))
-    main(debug)
+    print('{} email sent.'.format(main(debug)))

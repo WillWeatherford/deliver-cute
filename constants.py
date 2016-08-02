@@ -2,6 +2,7 @@
 import os
 
 HOME = '/'
+SECRET_KEY = os.environ['PROJECT_EMAIL']
 EMAIL = os.environ['PROJECT_EMAIL']
 PASSWORD = os.environ['PROJECT_PASSWORD']
 APP_PASSWORD = os.environ['PROJECT_APP_PASSWORD']

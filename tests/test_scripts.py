@@ -48,7 +48,8 @@ except NameError:
 
 CUTE_POSTS = []
 FIXED_LINKS = list(fix_image_links(CUTE_POSTS))
-SUBJECT = 'Debug'
+SUBJECT = 'DEBUG'
+TEXT = 'Plain text message.'
 BODY = '''
 <html>
 <h1>Test Header</h1>
@@ -72,11 +73,23 @@ BAD_URLS = product(PROTO, BAD_DOMAIN, HASH, BAD_EXT)
 class EmailCase(TestCase):
     """Testing sending of email."""
 
-    def test_send_mail(self):
+    def setUp(self):
+        """Send an email."""
+        mail.send_mail(
+            SUBJECT, TEXT, EMAIL, [EMAIL],
+            html_message=BODY,
+            fail_silently=False,
+        )
+        import pdb;pdb.set_trace()
+
+    def test_outbox(self):
         """Test sending an email."""
-        from on_schedule import send_email
-        send_email(SUBJECT, BODY, EMAIL, [EMAIL])
         self.assertEqual(len(mail.outbox), 1)
+
+    def test_subject(self):
+        """Test sending an email."""
+        email = mail.outbox[0]
+        self.assertEqual(SUBJECT, email.subject)
 
 
 class RedditAPICase(TestCase):
@@ -167,8 +180,6 @@ class CheckURLCase(TestCase):
     #     assert self.regex.match(fixed_link.url) is not None
 
 
-
-
 # @pytest.fixture(params=FIXED_LINKS)
 # def fixed_link(request):
 #     """Generate link fixed by having correct source url."""
@@ -196,11 +207,21 @@ class DebugCase(TestCase):
 
     def setUp(self):
         """Add debug user with project email to test database."""
+        from on_schedule import main
         self.subreddits = SubRedditFactory.create_batch()
         self.subscriber = SubscriberFactory.create(email=EMAIL)
         self.subscriber.subreddits.add(*self.subreddits)
+        self.result = main(True)
 
     def test_main(self):
         """Test the main() function of on_schedule.py in debug mode."""
-        from on_schedule import main
-        self.assertEqual(main(True), 1)
+        self.result = self.assertEqual(self.result, 1)
+
+    def test_outbox(self):
+        """Test sending an email."""
+        self.assertEqual(len(mail.outbox), 1)
+
+    def test_recipient(self):
+        """Test sending an email."""
+        email = mail.outbox[0]
+        self.assertEqual(self.subscriber.email, email.to[0])

@@ -5,6 +5,7 @@ coverage==4.1
 decorator==4.0.10
 dj-database-url==0.4.1
 Django==1.9.7
+django-smtp-ssl==1.0
 factory-boy==2.7.0
 fake-factory==0.5.9
 ipython==4.2.0
