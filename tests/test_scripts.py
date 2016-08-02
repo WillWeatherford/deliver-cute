@@ -174,7 +174,7 @@ class FakePostsCase(TestCase):
             list(sorted(set(deduped_urls)))
         )
 
-    # test html escaping by checking for &quot etc.
+    # test html escaping by checking for &quot, \u2018 etc.
 
 
 class CheckURLCase(TestCase):
