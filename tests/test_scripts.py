@@ -127,9 +127,10 @@ class FakePostsCase(TestCase):
     def setUp(self):
         """Set up fake_posts."""
         from on_schedule import htmlize_posts, get_email_body
+        self.subscriber = SubscriberFactory.create(email=EMAIL)
         self.posts = FakePost.create_batch(BATCH_SIZE)
         self.htmlized_posts = list(htmlize_posts(self.posts))
-        self.email_body = get_email_body(self.htmlized_posts)
+        self.email_body = get_email_body(self.subscriber, self.htmlized_posts)
         self.duplicates = FakePost.create_batch_with_dupes(BATCH_SIZE)
 
     @parameterized.expand(BATCH_PARAMS)
@@ -158,6 +159,11 @@ class FakePostsCase(TestCase):
         """Ensure that all FakePost attributes are unicode."""
         hp = self.htmlized_posts[idx]
         self.assertIn(hp, self.email_body)
+
+    def test_html_body_unsub_link(self, idx):
+        """Ensure that all FakePost attributes are unicode."""
+        self.assertIn('/unsubscribe/{}'.format(
+            self.subscriber.pk), self.email_body)
 
     def test_dedupe_posts(self):
         """Test that urls of deduped posts is equal to set of those urls."""
