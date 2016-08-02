@@ -1,5 +1,7 @@
 """Subscriber model tracking preferences for each email."""
 from django.db import models as md
+from hashlib import md5
+from time import time
 
 
 def get_hour(n):
@@ -9,12 +11,18 @@ def get_hour(n):
 HOUR_CHOICES = map(get_hour, range(24))
 
 
+def _hash():
+    """Generate a simple hash for default of unsubscribe_hash."""
+    return md5(str(time())).hexdigest()
+
+
 class Subscriber(md.Model):
     """Subscriber model tracking preferences for each email."""
 
     email = md.EmailField()
     send_hour = md.IntegerField(choices=HOUR_CHOICES, default=8)
     subreddits = md.ManyToManyField('SubReddit', related_name='subscribers')
+    unsubscribe_hash = md.CharField(default=_hash, unique=True, max_length=255)
 
     def __str__(self):
         """String representation of subscriber's email."""

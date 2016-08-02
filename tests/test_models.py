@@ -35,7 +35,7 @@ class SimpleCase(TestCase):
 
     def test_subreddit_unsub_hash(self):
         """Test initialization of new Subreddit with an unsubscribe hash."""
-        self.assertTrue(self.subreddit.unsubscribe_id)
+        self.assertTrue(self.subreddit.unsubscribe_hash)
 
     def test_one_subscriber(self):
         """Test that one subscriber has been registered in the ORM."""
