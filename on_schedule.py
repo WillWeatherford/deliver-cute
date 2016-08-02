@@ -37,17 +37,6 @@ USER_AGENT = 'python:deliver_cute:v1.0 (by /u/____OOOO____)'
 EMAIL_SUBJECT_TEMPLATE = '{debug}Cute Pics for {date}'
 FROM_NAME = 'Deliver Cute'
 PIC_WIDTH = '400'
-PIC_TEMPLATE = '''
-<p>
-  <p>
-    <a href={permalink}>{title}</a>
-    from <a href={subreddit_url}>{subreddit_name}</a>
-  </p>
-  <p>
-    <img src="{url}" style="width:{width}px" alt={title}>
-  </p>
-</p>
-'''
 
 YT_PAT = re.compile(r'.*(youtu\.be|youtube\.com).*')
 SRC_PAT = re.compile(r'http(s)?://i\.(imgur|reddituploads|redd).*\.[a-z]{3,4}')
