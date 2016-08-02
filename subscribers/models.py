@@ -13,7 +13,7 @@ HOUR_CHOICES = map(get_hour, range(24))
 
 def _hash():
     """Generate a simple hash for default of unsubscribe_hash."""
-    return md5(str(time())).hexdigest()
+    return md5(str(time()).encode('ascii')).hexdigest()
 
 
 class Subscriber(md.Model):

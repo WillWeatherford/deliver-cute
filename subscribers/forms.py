@@ -15,6 +15,6 @@ class SubscriberForm(forms.ModelForm):
     subreddits = forms.ModelMultipleChoiceField(
         widget=forms.CheckboxSelectMultiple,
         queryset=SubReddit.objects.order_by('display_name'),
-        initial=[sr.pk for sr in SubReddit.objects.all()],
+        # initial=[sr.pk for sr in SubReddit.objects.all()],
         required=False,
     )
