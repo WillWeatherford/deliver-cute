@@ -1,7 +1,6 @@
 """Testing Subscriber and SubReddit models."""
 from __future__ import unicode_literals, absolute_import
 
-import random
 from django.test import TestCase
 from nose_parameterized import parameterized
 
@@ -10,8 +9,6 @@ from constants import SUBREDDIT_NAMES
 from tests.classes import (
     SubRedditFactory,
     SubscriberFactory,
-    BATCH_SIZE,
-    SUBR_BATCH_SIZE,
     BATCH_PARAMS,
     SUBR_PARAMS,
 )
@@ -66,8 +63,7 @@ class MultiCase(TestCase):
 
     def setUp(self):
         """Setup many Subscribers and SubReddits."""
-        num = random.randrange(1, SUBR_BATCH_SIZE + 1)
-        self.subreddits = SubRedditFactory.create_batch(num)
+        self.subreddits = SubRedditFactory.create_random_batch()
         self.subscriber = SubscriberFactory.create()
         self.subscriber.subreddits.add(*self.subreddits)
 
