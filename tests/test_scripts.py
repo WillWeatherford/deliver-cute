@@ -6,6 +6,7 @@ from string import ascii_letters, digits
 from itertools import product, chain
 from django.test import TestCase
 from django.core import mail
+from django.core.urlresolvers import reverse
 from nose_parameterized import parameterized
 
 from on_schedule import fix_image_links, htmlize_posts, get_email_body
@@ -164,17 +165,18 @@ class FakePostsCase(TestCase):
         """Ensure that all FakePost attributes are unicode."""
         self.assertIn(post.subreddit.display_name, htmlized_post)
 
-    @parameterized.expand(FAKE_HTMLIZED_POSTS)
-    def test_html_body_contains(self, post, htmlized_post):
-        """Ensure that all FakePost attributes are unicode."""
-        self.assertIn(htmlized_post, self.email_body)
+    # @parameterized.expand(FAKE_HTMLIZED_POSTS)
+    # def test_html_body_contains(self, post, htmlized_post):
+    #     """Ensure that htmlized posts are contained by email body."""
+    #     self.assertIn(htmlized_post, self.email_body)
 
-    # def test_html_body_unsub_link(self):
-    #     """Ensure that all FakePost attributes are unicode."""
-    #     self.assertIn(
-    #         '/unsubscribe/{}'.format(self.subscriber.pk),
-    #         self.email_body
-    #     )
+    def test_html_body_unsub_link(self):
+        """Ensure that all FakePost attributes are unicode."""
+        unsub_url = reverse(
+            'unsubscribe',
+            args=(self.subscriber.unsubscribe_hash, )
+        )
+        self.assertIn(unsub_url, self.email_body)
 
     # def test_dedupe_posts(self):
     #     """Test that urls of deduped posts is equal to set of those urls."""
