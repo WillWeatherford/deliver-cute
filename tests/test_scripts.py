@@ -9,7 +9,7 @@ from django.core import mail
 from django.core.urlresolvers import reverse
 from nose_parameterized import parameterized
 
-from on_schedule import fix_image_links, htmlize_posts, get_email_body
+from on_schedule import fix_image_links, htmlize_posts
 from constants import SUBREDDIT_NAMES, LIMIT, EMAIL, UNICODE
 from tests.classes import (
     FakePost,
@@ -260,9 +260,10 @@ class DebugCase(TestCase):
         self.assertEqual(self.subscriber.email, email.to[0])
 
     def test_unsubscribe_link(self):
-        """Test sending an email."""
+        """Check that unsubscribe link is in outgoing email."""
         email = mail.outbox[0]
-        self.assertIn(
-            b'/unsubscribe/' + str(self.subscriber.pk).encode('ascii'),
-            email.alternatives,
+        unsub_url = reverse(
+            'unsubscribe',
+            args=(self.subscriber.unsubscribe_hash, )
         )
+        self.assertIn(unsub_url, email.alternatives[0][0])
