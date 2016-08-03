@@ -83,5 +83,7 @@ class MultiCase(TestCase):
     @parameterized.expand(BATCH_PARAMS)
     def test_subreddit_names(self, idx):
         """Test subreddit_names method of Subscriber."""
-        for name in self.subscriber.subreddit_names():
-            self.assertIn(name, SUBREDDIT_NAMES)
+        self.assertEqual(
+            list(self.subscriber.subreddit_names()),
+            [sr.display_name for sr in self.subreddits]
+        )
