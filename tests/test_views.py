@@ -11,12 +11,11 @@ from subscribers.models import Subscriber
 
 # Load form.
 # Input to form.
-# Redirection on success?
+# Redirection on success
 # Bad input
 #   no email
 #   incorrect email
 #   select at least one subreddit?
-# Good input
 
 
 # Different params for POST
@@ -33,12 +32,15 @@ GOOD_PARAMS = {
 }
 
 
+#parameterize by iterating over sets of input params
+
+
 class UnAuthCase(TestCase):
     """Website use case where user is not logged in."""
 
     def setUp(self):
         """Establish client and responses."""
-        self.subreddits = SubRedditFactory.create_batch()
+        self.subreddits = SubRedditFactory.create_random_batch()
         self.client = Client()
         self.good_post = self.client.post(HOME, GOOD_PARAMS, follow=True)
 
@@ -71,14 +73,17 @@ class UnAuthCase(TestCase):
 
 
 class AlreadySubscribedCase(TestCase):
-    """Website use case where user is not logged in."""
+    """Website use case where user is trying to unsubscribe."""
 
     def setUp(self):
         """Establish client and responses."""
-        self.subreddits = SubRedditFactory.create_batch()
+        self.subreddits = SubRedditFactory.create_random_batch()
         self.subscriber = SubscriberFactory.create(email=EMAIL)
         self.subscriber.subreddits.add(*self.subreddits)
-        self.unsub_url = reverse('unsubscribe', args=(self.subscriber.pk, ))
+        self.unsub_url = reverse(
+            'unsubscribe',
+            args=(self.subscriber.unsubscribe_hash, )
+        )
         self.client = Client()
         self.unsub_get = self.client.get(self.unsub_url, follow=True)
         self.unsub_post = self.client.post(self.unsub_url, follow=True)
