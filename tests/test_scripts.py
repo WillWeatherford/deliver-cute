@@ -3,12 +3,12 @@ from __future__ import unicode_literals, absolute_import
 
 import random
 from string import ascii_letters, digits
-from itertools import product
+from itertools import product, chain
 from django.test import TestCase
 from django.core import mail
 from nose_parameterized import parameterized
 
-from on_schedule import fix_image_links
+from on_schedule import fix_image_links, htmlize_posts, get_email_body
 from constants import SUBREDDIT_NAMES, LIMIT, EMAIL, UNICODE
 from tests.classes import (
     FakePost,
@@ -104,16 +104,24 @@ class RedditAPICase(TestCase):
         """Confirm that given subreddits returns a dictionary."""
         self.assertIsInstance(self.all_posts, dict)
 
-    @parameterized.expand(SUBR_NAME_PARAMS)
-    def test_cute_posts(self, name):
-        """Test that gathered posts have links."""
-        for post in self.all_posts[name]:
-            self.assertTrue(post.url.startswith('http'))
+    # @parameterized.expand(SUBR_NAME_PARAMS)
+    # def test_cute_posts(self, name):
+    #     """Test that gathered posts have links."""
+    #     for post in self.all_posts[name]:
+    #         self.assertTrue(post.url.startswith('http'))
 
-    @parameterized.expand(SUBR_NAME_PARAMS)
-    def test_cute_posts_count(self, name):
-        """Test that number of links is at or under the limit per subreddit."""
-        self.assertLessEqual(len(self.all_posts[name]), LIMIT)
+    # @parameterized.expand(SUBR_NAME_PARAMS)
+    # def test_cute_posts_count(self, name):
+    #     """Test that number of links is at or under the limit per subreddit."""
+    #     self.assertLessEqual(len(self.all_posts[name]), LIMIT)
+
+FAKE_POSTS = FakePost.create_batch(BATCH_SIZE)
+FAKE_POST_ARGS = ((p, ) for p in FAKE_POSTS)
+FAKE_POST_ATTRS = ((attr, ) for attr in chain(
+    *((p.title, p.url, p.permalink, p.subreddit.display_name)
+      for p in FAKE_POSTS)))
+HTMLIZED_POSTS = htmlize_posts(FAKE_POSTS)
+FAKE_HTMLIZED_POSTS = zip(FAKE_POSTS, HTMLIZED_POSTS)
 
 
 class FakePostsCase(TestCase):
@@ -121,56 +129,61 @@ class FakePostsCase(TestCase):
 
     def setUp(self):
         """Set up fake_posts."""
-        from on_schedule import htmlize_posts, get_email_body
+        from on_schedule import get_email_body
         self.subscriber = SubscriberFactory.create(email=EMAIL)
-        self.posts = FakePost.create_batch(BATCH_SIZE)
-        self.htmlized_posts = list(htmlize_posts(self.posts))
-        self.email_body = get_email_body(self.subscriber, self.htmlized_posts)
-        # import pdb;pdb.set_trace()
-        self.duplicates = FakePost.create_batch_with_dupes(BATCH_SIZE)
+        self.email_body = get_email_body(self.subscriber, HTMLIZED_POSTS)
+        # self.duplicates = FakePost.create_batch_with_dupes(BATCH_SIZE)
 
-    @parameterized.expand(BATCH_PARAMS)
-    def test_unicode(self, idx):
+    @parameterized.expand(FAKE_POST_ATTRS)
+    def test_unicode_attrs(self, attr):
         """Ensure that all FakePost attributes are unicode."""
-        p = self.posts[idx]
-        for attr in (p.title, p.url, p.permalink, p.subreddit.display_name):
-            self.assertIsInstance(attr, UNICODE)
+        self.assertIsInstance(attr, UNICODE)
 
-    @parameterized.expand(BATCH_PARAMS)
-    def test_htmlize_unicode(self, idx):
+    @parameterized.expand(FAKE_HTMLIZED_POSTS)
+    def test_htmlize_unicode(self, post, htmlized_post):
         """Test that htmlize runs without breaking."""
-        post = self.htmlized_posts[idx]
-        self.assertIsInstance(post, UNICODE)
+        self.assertIsInstance(htmlized_post, UNICODE)
 
-    @parameterized.expand(BATCH_PARAMS)
-    def test_html_post_contains(self, idx):
+    @parameterized.expand(FAKE_HTMLIZED_POSTS)
+    def test_html_post_contains_title(self, post, htmlized_post):
         """Ensure that all FakePost attributes are unicode."""
-        p = self.posts[idx]
-        hp = self.htmlized_posts[idx]
-        for attr in (p.title, p.url, p.permalink, p.subreddit.display_name):
-            self.assertIn(attr, hp)
+        self.assertIn(post.title, htmlized_post)
 
-    @parameterized.expand(BATCH_PARAMS)
-    def test_html_body_contains(self, idx):
+    @parameterized.expand(FAKE_HTMLIZED_POSTS)
+    def test_html_post_contains_url(self, post, htmlized_post):
         """Ensure that all FakePost attributes are unicode."""
-        hp = self.htmlized_posts[idx]
-        self.assertIn(hp, self.email_body)
+        self.assertIn(post.url, htmlized_post)
 
-    def test_html_body_unsub_link(self):
+    @parameterized.expand(FAKE_HTMLIZED_POSTS)
+    def test_html_post_contains_permalink(self, post, htmlized_post):
         """Ensure that all FakePost attributes are unicode."""
-        self.assertIn(
-            '/unsubscribe/{}'.format(self.subscriber.pk),
-            self.email_body
-        )
+        self.assertIn(post.permalink, htmlized_post)
 
-    def test_dedupe_posts(self):
-        """Test that urls of deduped posts is equal to set of those urls."""
-        from on_schedule import dedupe_posts
-        deduped_urls = [post.url for post in dedupe_posts(self.duplicates)]
-        self.assertEqual(
-            list(sorted(deduped_urls)),
-            list(sorted(set(deduped_urls)))
-        )
+    @parameterized.expand(FAKE_HTMLIZED_POSTS)
+    def test_html_post_contains_subreddit(self, post, htmlized_post):
+        """Ensure that all FakePost attributes are unicode."""
+        self.assertIn(post.subreddit.display_name, htmlized_post)
+
+    @parameterized.expand(FAKE_HTMLIZED_POSTS)
+    def test_html_body_contains(self, post, htmlized_post):
+        """Ensure that all FakePost attributes are unicode."""
+        self.assertIn(htmlized_post, self.email_body)
+
+    # def test_html_body_unsub_link(self):
+    #     """Ensure that all FakePost attributes are unicode."""
+    #     self.assertIn(
+    #         '/unsubscribe/{}'.format(self.subscriber.pk),
+    #         self.email_body
+    #     )
+
+    # def test_dedupe_posts(self):
+    #     """Test that urls of deduped posts is equal to set of those urls."""
+    #     from on_schedule import dedupe_posts
+    #     deduped_urls = [post.url for post in dedupe_posts(self.duplicates)]
+    #     self.assertEqual(
+    #         list(sorted(deduped_urls)),
+    #         list(sorted(set(deduped_urls)))
+    #     )
 
     # test html escaping by checking for &quot, \u2018 etc.
 
@@ -226,7 +239,7 @@ class DebugCase(TestCase):
     def setUp(self):
         """Add debug user with project email to test database."""
         from on_schedule import main
-        self.subreddits = SubRedditFactory.create_batch()
+        self.subreddits = SubRedditFactory.create_random_batch()
         self.subscriber = SubscriberFactory.create(email=EMAIL)
         self.subscriber.subreddits.add(*self.subreddits)
         self.result = main(True)
