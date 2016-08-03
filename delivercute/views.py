@@ -34,3 +34,4 @@ class Unsubcribe(DeleteView):
 
     success_url = '/'
     model = Subscriber
+    slug_field = 'unsubscribe_hash'

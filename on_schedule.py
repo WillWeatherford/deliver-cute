@@ -6,12 +6,12 @@ This program requests the top links from various subreddits of cute animals
 and email them to participants.
 """
 from __future__ import unicode_literals, absolute_import
-try:
-    from html import escape
-    print('Python 3: using html.escape()')
-except ImportError:
-    from cgi import escape
-    print('Python 2: using cgi.escape()')
+# try:
+#     from html import escape
+#     print('Python 3: using html.escape()')
+# except ImportError:
+#     from cgi import escape
+#     print('Python 2: using cgi.escape()')
 
 import re
 import sys
@@ -29,6 +29,7 @@ from datetime import date, datetime
 # from email.mime.multipart import MIMEMultipart
 from constants import LIMIT, EMAIL, APP_PASSWORD
 django.setup()
+from django.conf import settings
 from subscribers.models import Subscriber
 from django.core.mail import send_mail
 from django.template.loader import render_to_string
@@ -169,7 +170,11 @@ def htmlize_posts(posts):
 
 def get_email_body(subscriber, posts):
     """Format posts into HTML."""
-    context = {'posts': posts, 'subscriber': subscriber}
+    context = {
+        'posts': posts,
+        'subscriber': subscriber,
+        'site_url': settings.SITE_URL,
+    }
     return render_to_string('daily_email.html', context=context)
 
 

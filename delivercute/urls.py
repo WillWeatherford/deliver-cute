@@ -22,7 +22,7 @@ from delivercute.views import Main, Unsubcribe
 urlpatterns = [
     url(r'^admin/', admin.site.urls),
     url(r'^$', Main.as_view(), name='home'),
-    url(r'^unsubscribe/(?P<pk>[0-9]+)/$',
+    url(r'^unsubscribe/(?P<slug>[0-9a-f]+)/$',
         Unsubcribe.as_view(),
         name='unsubscribe',
         )
