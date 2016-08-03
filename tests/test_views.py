@@ -96,8 +96,6 @@ class UnAuthCase(TestCase):
         new_subscriber = Subscriber.objects.get(email=params['email'])
         self.assertTrue(new_subscriber.pk)
 
-        #test update instead of create when subsc already exists
-
 
 class AlreadySubscribedCase(TestCase):
     """Website use case where user is trying to unsubscribe."""
@@ -112,23 +110,35 @@ class AlreadySubscribedCase(TestCase):
             args=(self.subscriber.unsubscribe_hash, )
         )
         self.client = Client()
-        self.unsub_get = self.client.get(self.unsub_url, follow=True)
-        self.unsub_post = self.client.post(self.unsub_url, follow=True)
 
     def tearDown(self):
         """Delete all users to re-use good params."""
         for subscriber in Subscriber.objects.all():
             subscriber.delete()
 
+    def test_update(self):
+        """Test that Subscriber information is updated on re-post of email."""
+        params = {
+            'email': self.subscriber.email,
+            'send_hour': random.randrange(24),
+        }
+        self.client.post(HOME, params, follow=True)
+        self.assertEqual(
+            Subscriber.objects.filter(email=self.subscriber.email).count(), 1
+        )
+
     def test_unsubscribe_status(self):
         """Check that unsubscribe redirects to successful unsubscribe page."""
-        self.assertEqual(self.unsub_get.status_code, 200)
+        response = self.client.get(self.unsub_url, follow=True)
+        self.assertEqual(response.status_code, 200)
 
     def test_unsubscribe_redirected(self):
         """Check that user is redirected to front page on successful unsub."""
-        self.assertRedirects(self.unsub_post, HOME, status_code=302)
+        response = self.client.post(self.unsub_url, follow=True)
+        self.assertRedirects(response, HOME, status_code=302)
 
     def test_unsubscribe_deleted(self):
         """Check that user is deleted on unsubscriber."""
+        response = self.client.post(self.unsub_url, follow=True)
         with self.assertRaises(Subscriber.DoesNotExist):
             Subscriber.objects.get(pk=self.subscriber.pk)
