@@ -80,13 +80,15 @@ class UnAuthCase(TestCase):
         response = self.client.post(reverse('home'), params, follow=True)
         self.assertNotIn(b'Select a valid choice.', response.content)
 
-    # def test_good_add_row(self):
-    #     """Test that a new Subscriber has been entered into the database."""
-    #     new_subscriber = Subscriber.objects.get(email=GOOD_PARAMS['email'])
-    #     self.assertTrue(new_subscriber.pk)
+    @parameterized.expand(good_params)
+    def test_good_add_row(self, params):
+        """Test that a new Subscriber has been entered into the database."""
+        self.client.post(reverse('home'), params, follow=True)
+        new_subscriber = Subscriber.objects.get(email=params['email'])
+        self.assertTrue(new_subscriber.pk)
 
+        #test update instead of create when subsc already exists
 
-        #test update  instead of crete when subsc already exists
 
 class AlreadySubscribedCase(TestCase):
     """Website use case where user is trying to unsubscribe."""
