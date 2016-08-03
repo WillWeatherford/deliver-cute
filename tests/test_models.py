@@ -14,23 +14,17 @@ from tests.classes import (
 )
 
 
-class SimpleCase(TestCase):
-    """Very simple case to test instantiation of Subscriber class."""
+class SingleSubscriberCase(TestCase):
+    """Very simple case to test instantiation of SubReddit class."""
 
     def setUp(self):
         """Set up model instances."""
         self.subscriber = SubscriberFactory.create()
-        self.subreddit = SubRedditFactory.create()
 
     @parameterized.expand(BATCH_PARAMS)
     def test_subscriber(self, idx):
         """Test initialization of new Subscriber."""
         self.assertTrue(self.subscriber.pk)
-
-    @parameterized.expand(BATCH_PARAMS)
-    def test_subreddit(self, idx):
-        """Test initialization of new Subreddit."""
-        self.assertTrue(self.subreddit.pk)
 
     @parameterized.expand(BATCH_PARAMS)
     def test_subscriber_unsub_hash(self, idx):
@@ -43,14 +37,27 @@ class SimpleCase(TestCase):
         self.assertEqual(Subscriber.objects.count(), 1)
 
     @parameterized.expand(BATCH_PARAMS)
-    def test_one_subreddit(self, idx):
-        """Test that one subreddit has been registered in the ORM."""
-        self.assertEqual(SubReddit.objects.count(), 1)
-
-    @parameterized.expand(BATCH_PARAMS)
     def test_subscriber_str(self, idx):
         """Check str method of Subscriber."""
         self.assertIsInstance(str(self.subscriber), str)
+
+
+class SingleSubRedditCase(TestCase):
+    """Very simple case to test instantiation of SubReddit class."""
+
+    def setUp(self):
+        """Set up model instances."""
+        self.subreddit = SubRedditFactory.create()
+
+    @parameterized.expand(BATCH_PARAMS)
+    def test_subreddit(self, idx):
+        """Test initialization of new Subreddit."""
+        self.assertTrue(self.subreddit.pk)
+
+    @parameterized.expand(BATCH_PARAMS)
+    def test_one_subreddit(self, idx):
+        """Test that one subreddit has been registered in the ORM."""
+        self.assertEqual(SubReddit.objects.count(), 1)
 
     @parameterized.expand(SUBR_PARAMS)
     def test_subreddit_str(self, idx):
