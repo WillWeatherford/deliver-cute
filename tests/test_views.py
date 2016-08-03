@@ -5,10 +5,12 @@ import random
 from faker import Faker
 from django.test import TestCase, Client
 from django.core.urlresolvers import reverse
-from constants import SUBREDDIT_NAMES, EMAIL, HOME
+from constants import SUBREDDIT_NAMES, EMAIL
 from tests.classes import BATCH_SIZE, SubRedditFactory, SubscriberFactory
 from subscribers.models import Subscriber
 from nose_parameterized import parameterized
+
+HOME = reverse('home')
 
 # Load form.
 # Input to form.
@@ -17,6 +19,7 @@ from nose_parameterized import parameterized
 #   no email
 #   incorrect email
 #   select at least one subreddit?
+#   bad unsubscribe hash
 # Different params for POST
 # unsubscribe only some of many users
 
@@ -59,31 +62,37 @@ class UnAuthCase(TestCase):
 
     def test_get(self):
         """Test that front page/subscription form simply loads."""
-        response = self.client.get(reverse('home'))
+        response = self.client.get(HOME)
         self.assertEqual(response.status_code, 200)
 
     @parameterized.expand(good_params)
-    def test_good_200(self, params):
+    def test_good_post_redirect(self, params):
         """Test subscribers register properly in database with good params."""
-        response = self.client.post(reverse('home'), params, follow=True)
+        response = self.client.post(HOME, params, follow=True)
+        self.assertRedirects(response, HOME, status_code=302)
+
+    @parameterized.expand(good_params)
+    def test_good_post_200(self, params):
+        """Test subscribers register properly in database with good params."""
+        response = self.client.post(HOME, params, follow=True)
         self.assertEqual(response.status_code, 200)
 
     @parameterized.expand(good_params)
     def test_good_req_fields(self, params):
         """Test that all required fields are filled in for good post."""
-        response = self.client.post(reverse('home'), params, follow=True)
+        response = self.client.post(HOME, params, follow=True)
         self.assertNotIn(b'This field is required', response.content)
 
     @parameterized.expand(good_params)
     def test_good_valid_input(self, params):
         """Test that input data is valid for good post."""
-        response = self.client.post(reverse('home'), params, follow=True)
+        response = self.client.post(HOME, params, follow=True)
         self.assertNotIn(b'Select a valid choice.', response.content)
 
     @parameterized.expand(good_params)
     def test_good_add_row(self, params):
         """Test that a new Subscriber has been entered into the database."""
-        self.client.post(reverse('home'), params, follow=True)
+        self.client.post(HOME, params, follow=True)
         new_subscriber = Subscriber.objects.get(email=params['email'])
         self.assertTrue(new_subscriber.pk)
 
@@ -117,7 +126,7 @@ class AlreadySubscribedCase(TestCase):
 
     def test_unsubscribe_redirected(self):
         """Check that user is redirected to front page on successful unsub."""
-        self.assertRedirects(self.unsub_post, reverse('home'), status_code=302)
+        self.assertRedirects(self.unsub_post, HOME, status_code=302)
 
     def test_unsubscribe_deleted(self):
         """Check that user is deleted on unsubscriber."""
