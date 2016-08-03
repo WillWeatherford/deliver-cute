@@ -26,11 +26,11 @@ class SubRedditFactory(DjangoModelFactory):
 
     display_name = factory.Iterator(SUBREDDIT_NAMES)
 
-    @classmethod
-    def create_batch(cls, **kwargs):
-        """Constant batch size of all subreddits."""
-        return super(SubRedditFactory, cls).create_batch(
-            len(SUBREDDIT_NAMES), **kwargs)
+    # @classmethod
+    # def create_batch(cls, **kwargs):
+    #     """Constant batch size of all subreddits."""
+    #     return super(SubRedditFactory, cls).create_batch(
+    #         len(SUBREDDIT_NAMES), **kwargs)
 
 
 class SubscriberFactory(DjangoModelFactory):

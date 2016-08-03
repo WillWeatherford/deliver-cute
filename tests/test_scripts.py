@@ -9,7 +9,7 @@ from django.core import mail
 from nose_parameterized import parameterized
 
 from on_schedule import fix_image_links
-from constants import SUBREDDIT_NAMES, LIMIT, EMAIL
+from constants import SUBREDDIT_NAMES, LIMIT, EMAIL, UNICODE
 from tests.classes import (
     FakePost,
     SubscriberFactory,
@@ -20,13 +20,6 @@ from tests.classes import (
     # SUBR_PARAMS,
     SUBR_NAME_PARAMS,
 )
-
-try:
-    UNICODE = unicode
-    print('Python 2, using unicode class.')
-except NameError:
-    UNICODE = str
-    print('Python 3, using str class.')
 
 # TODO
 # test unicode status of incoming PRAW post objects

@@ -1,5 +1,13 @@
 """Hold constant values used in multiple places in project."""
+from __future__ import unicode_literals, absolute_import
 import os
+
+try:
+    UNICODE = unicode
+    print('Python 2, using unicode class.')
+except NameError:
+    UNICODE = str
+    print('Python 3, using str class.')
 
 HOME = '/'
 SECRET_KEY = os.environ['PROJECT_EMAIL']

@@ -3,15 +3,12 @@ from __future__ import unicode_literals, absolute_import
 from django.db import models as md
 from hashlib import md5
 from datetime import datetime
+from constants import UNICODE
 
 
 def _hash():
     """Generate a simple hash for default of unsubscribe_hash."""
-    try:
-        uni = unicode
-    except NameError:
-        uni = str
-    now = uni(datetime.now()).encode('ascii')
+    now = UNICODE(datetime.now()).encode('ascii')
     return md5(now).hexdigest()
 
 

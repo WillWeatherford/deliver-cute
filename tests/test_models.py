@@ -25,61 +25,60 @@ class SimpleCase(TestCase):
         self.subscriber = SubscriberFactory.create()
         self.subreddit = SubRedditFactory.create()
 
-    def test_subscriber(self):
+    @parameterized.expand(BATCH_PARAMS)
+    def test_subscriber(self, idx):
         """Test initialization of new Subscriber."""
         self.assertTrue(self.subscriber.pk)
 
-    def test_subreddit(self):
+    @parameterized.expand(BATCH_PARAMS)
+    def test_subreddit(self, idx):
         """Test initialization of new Subreddit."""
         self.assertTrue(self.subreddit.pk)
 
-    def test_subscriber_unsub_hash(self):
+    @parameterized.expand(BATCH_PARAMS)
+    def test_subscriber_unsub_hash(self, idx):
         """Test initialization of new Subreddit with an unsubscribe hash."""
         self.assertTrue(self.subscriber.unsubscribe_hash)
 
-    def test_one_subscriber(self):
+    @parameterized.expand(BATCH_PARAMS)
+    def test_one_subscriber(self, idx):
         """Test that one subscriber has been registered in the ORM."""
         self.assertEqual(Subscriber.objects.count(), 1)
 
-    def test_one_subreddit(self):
+    @parameterized.expand(BATCH_PARAMS)
+    def test_one_subreddit(self, idx):
         """Test that one subreddit has been registered in the ORM."""
         self.assertEqual(SubReddit.objects.count(), 1)
-
-
-class MultiCase(TestCase):
-    """Multiple Subscribers with multiple subreddits."""
-
-    def setUp(self):
-        """Setup many Subscribers and SubReddits."""
-        self.subreddits = SubRedditFactory.create_batch()
-        self.subscribers = SubscriberFactory.create_batch(BATCH_SIZE)
-        for s in self.subscribers:
-            num = random.randrange(SUBR_BATCH_SIZE)
-            subscription = SubReddit.objects.order_by('?')[:num]
-            s.subreddits.add(*subscription)
-
-    @parameterized.expand(BATCH_PARAMS)
-    def test_multiple(self, idx):
-        """Check that relationship is sound."""
-        subscriber = self.subscribers[idx]
-        for sr in subscriber.subreddits.all():
-            self.assertTrue(sr.pk)
 
     @parameterized.expand(BATCH_PARAMS)
     def test_subscriber_str(self, idx):
         """Check str method of Subscriber."""
-        subscriber = self.subscribers[idx]
-        self.assertIsInstance(str(subscriber), str)
+        self.assertIsInstance(str(self.subscriber), str)
 
     @parameterized.expand(SUBR_PARAMS)
     def test_subreddit_str(self, idx):
         """Check str method of SubReddit."""
-        subreddit = self.subreddits[idx]
-        self.assertIn(str(subreddit), SUBREDDIT_NAMES)
+        self.assertIn(str(self.subreddit), SUBREDDIT_NAMES)
+
+
+class MultiCase(TestCase):
+    """Subscribers with multiple subreddits."""
+
+    def setUp(self):
+        """Setup many Subscribers and SubReddits."""
+        num = random.randrange(1, SUBR_BATCH_SIZE + 1)
+        self.subreddits = SubRedditFactory.create_batch(num)
+        self.subscriber = SubscriberFactory.create()
+        self.subscriber.subreddits.add(*self.subreddits)
+
+    @parameterized.expand(BATCH_PARAMS)
+    def test_multiple(self, idx):
+        """Check that relationship is sound."""
+        for sr in self.subscriber.subreddits.all():
+            self.assertTrue(sr.pk)
 
     @parameterized.expand(BATCH_PARAMS)
     def test_subreddit_names(self, idx):
         """Test subreddit_names method of Subscriber."""
-        subscriber = self.subscribers[idx]
-        for name in subscriber.subreddit_names():
+        for name in self.subscriber.subreddit_names():
             self.assertIn(name, SUBREDDIT_NAMES)
