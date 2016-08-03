@@ -18,6 +18,7 @@ from nose_parameterized import parameterized
 #   incorrect email
 #   select at least one subreddit?
 # Different params for POST
+# unsubscribe only some of many users
 
 
 def good_params():
@@ -50,7 +51,6 @@ class UnAuthCase(TestCase):
         """Establish client and responses."""
         self.subreddits = SubRedditFactory.create_random_batch()
         self.client = Client()
-        # self.good_post = self.client.post(HOME, GOOD_PARAMS, follow=True)
 
     def tearDown(self):
         """Delete all users to re-use good params."""
@@ -96,7 +96,7 @@ class AlreadySubscribedCase(TestCase):
     def setUp(self):
         """Establish client and responses."""
         self.subreddits = SubRedditFactory.create_random_batch()
-        self.subscriber = SubscriberFactory.create(email=EMAIL)
+        self.subscriber = SubscriberFactory.create()
         self.subscriber.subreddits.add(*self.subreddits)
         self.unsub_url = reverse(
             'unsubscribe',
