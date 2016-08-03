@@ -6,8 +6,9 @@ from faker import Faker
 from django.test import TestCase, Client
 from django.core.urlresolvers import reverse
 from constants import SUBREDDIT_NAMES, EMAIL, HOME
-from tests.classes import SubRedditFactory, SubscriberFactory
+from tests.classes import BATCH_SIZE, SubRedditFactory, SubscriberFactory
 from subscribers.models import Subscriber
+from nose_parameterized import parameterized
 
 # Load form.
 # Input to form.
@@ -16,20 +17,27 @@ from subscribers.models import Subscriber
 #   no email
 #   incorrect email
 #   select at least one subreddit?
-
-
 # Different params for POST
 
-fake = Faker()
-UNSUB = '/unsubscribe/{pk}'
-GOOD_PARAMS = {
-    'email': fake.email(),
-    'send_hour': str(random.randrange(24)),
-    # 'subreddits': [str(n) for n in random.sample(
-    #     range(1, len(SUBREDDIT_NAMES) + 1),
-    #     random.randrange(1, len(SUBREDDIT_NAMES) + 1)
-    # )],
-}
+
+def good_params():
+    """Generate good parameters to post on main form."""
+    fake = Faker()
+    for _ in range(BATCH_SIZE):
+        params = {'email': fake.email(),
+                  'send_hour': str(random.randrange(24)),
+                  'subreddits': [],
+                  }
+        yield (params, )
+
+# GOOD_PARAMS = {
+#     'email': fake.email(),
+#     'send_hour': str(random.randrange(24)),
+#     # 'subreddits': [str(n) for n in random.sample(
+#     #     range(1, len(SUBREDDIT_NAMES) + 1),
+#     #     random.randrange(1, len(SUBREDDIT_NAMES) + 1)
+#     # )],
+# }
 
 
 #parameterize by iterating over sets of input params
@@ -42,7 +50,7 @@ class UnAuthCase(TestCase):
         """Establish client and responses."""
         self.subreddits = SubRedditFactory.create_random_batch()
         self.client = Client()
-        self.good_post = self.client.post(HOME, GOOD_PARAMS, follow=True)
+        # self.good_post = self.client.post(HOME, GOOD_PARAMS, follow=True)
 
     def tearDown(self):
         """Delete all users to re-use good params."""
@@ -54,23 +62,31 @@ class UnAuthCase(TestCase):
         response = self.client.get(reverse('home'))
         self.assertEqual(response.status_code, 200)
 
-    def test_good_200(self):
+    @parameterized.expand(good_params)
+    def test_good_200(self, params):
         """Test subscribers register properly in database with good params."""
-        self.assertEqual(self.good_post.status_code, 200)
+        response = self.client.post(reverse('home'), params, follow=True)
+        self.assertEqual(response.status_code, 200)
 
-    def test_good_req_fields(self):
+    @parameterized.expand(good_params)
+    def test_good_req_fields(self, params):
         """Test that all required fields are filled in for good post."""
-        self.assertNotIn(b'This field is required', self.good_post.content)
+        response = self.client.post(reverse('home'), params, follow=True)
+        self.assertNotIn(b'This field is required', response.content)
 
-    def test_good_valid_input(self):
+    @parameterized.expand(good_params)
+    def test_good_valid_input(self, params):
         """Test that input data is valid for good post."""
-        self.assertNotIn(b'Select a valid choice.', self.good_post.content)
+        response = self.client.post(reverse('home'), params, follow=True)
+        self.assertNotIn(b'Select a valid choice.', response.content)
 
-    def test_good_add_row(self):
-        """Test that a new Subscriber has been entered into the database."""
-        new_subscriber = Subscriber.objects.get(email=GOOD_PARAMS['email'])
-        self.assertTrue(new_subscriber.pk)
+    # def test_good_add_row(self):
+    #     """Test that a new Subscriber has been entered into the database."""
+    #     new_subscriber = Subscriber.objects.get(email=GOOD_PARAMS['email'])
+    #     self.assertTrue(new_subscriber.pk)
 
+
+        #test update  instead of crete when subsc already exists
 
 class AlreadySubscribedCase(TestCase):
     """Website use case where user is trying to unsubscribe."""
