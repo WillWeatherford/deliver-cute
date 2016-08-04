@@ -121,7 +121,7 @@ FAKE_POST_ARGS = ((p, ) for p in FAKE_POSTS)
 FAKE_POST_ATTRS = ((attr, ) for attr in chain(
     *((p.title, p.url, p.permalink, p.subreddit.display_name)
       for p in FAKE_POSTS)))
-HTMLIZED_POSTS = htmlize_posts(FAKE_POSTS)
+HTMLIZED_POSTS = list(htmlize_posts(FAKE_POSTS))
 FAKE_HTMLIZED_POSTS = zip(FAKE_POSTS, HTMLIZED_POSTS)
 
 
@@ -165,10 +165,10 @@ class FakePostsCase(TestCase):
         """Ensure that all FakePost attributes are unicode."""
         self.assertIn(post.subreddit.display_name, htmlized_post)
 
-    # @parameterized.expand(FAKE_HTMLIZED_POSTS)
-    # def test_html_body_contains(self, post, htmlized_post):
-    #     """Ensure that htmlized posts are contained by email body."""
-    #     self.assertIn(htmlized_post, self.email_body)
+    @parameterized.expand(FAKE_HTMLIZED_POSTS)
+    def test_html_body_contains(self, post, htmlized_post):
+        """Ensure that htmlized posts are contained by email body."""
+        self.assertIn(htmlized_post, self.email_body)
 
     def test_html_body_unsub_link(self):
         """Ensure that all FakePost attributes are unicode."""

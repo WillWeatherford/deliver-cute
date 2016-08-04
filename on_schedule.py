@@ -155,6 +155,7 @@ def find_source_link(link):
 def htmlize_posts(posts):
     """Generate each link as an html-ized image element."""
     for post in posts:
+        # import pdb;pdb.set_trace()
         subreddit = post.subreddit.display_name
         context = {
             'subreddit': subreddit,
