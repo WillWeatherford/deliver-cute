@@ -25,7 +25,7 @@ class Subscriber(md.Model):
     email = md.EmailField()
     send_hour = md.IntegerField(choices=HOUR_CHOICES, default=8)
     subreddits = md.ManyToManyField('SubReddit', related_name='subscribers')
-    unsubscribe_hash = md.CharField(default=_hash, unique=True, max_length=255)
+    unsubscribe_hash = md.CharField(default=_hash, max_length=255)
 
     def __str__(self):
         """String representation of subscriber's email."""
