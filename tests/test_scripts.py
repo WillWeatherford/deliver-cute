@@ -117,66 +117,83 @@ class RedditAPICase(TestCase):
     #     self.assertLessEqual(len(self.all_posts[name]), LIMIT)
 
 FAKE_POSTS = FakePost.create_batch(BATCH_SIZE)
-FAKE_POST_ARGS = ((p, ) for p in FAKE_POSTS)
+# FAKE_POST_ARGS = ((p, ) for p in FAKE_POSTS)
 FAKE_POST_ATTRS = ((attr, ) for attr in chain(
     *((p.title, p.url, p.permalink, p.subreddit.display_name)
       for p in FAKE_POSTS)))
-HTMLIZED_POSTS = list(htmlize_posts(FAKE_POSTS))
-FAKE_HTMLIZED_POSTS = zip(FAKE_POSTS, HTMLIZED_POSTS)
+# HTMLIZED_POSTS = list(htmlize_posts(FAKE_POSTS))
+# FAKE_HTMLIZED_POSTS = zip(FAKE_POSTS, HTMLIZED_POSTS)
 
 
 class FakePostsCase(TestCase):
     """Using fake posts to test unicode and html escaping."""
 
-    def setUp(self):
-        """Set up fake_posts."""
-        from on_schedule import get_email_body
-        self.subscriber = SubscriberFactory.create(email=EMAIL)
-        self.email_body = get_email_body(self.subscriber, HTMLIZED_POSTS)
-        # self.duplicates = FakePost.create_batch_with_dupes(BATCH_SIZE)
+    def __init__(self, *args, **kwargs):
+        """Initialize data groups."""
+        super(FakePostsCase, self).__init__(*args, **kwargs)
+        self.fake_posts = FakePost.create_batch(BATCH_SIZE)
+        self.htmlized_posts = list(htmlize_posts(self.fake_posts))
 
-    @parameterized.expand(FAKE_POST_ATTRS)
-    def test_unicode_attrs(self, attr):
-        """Ensure that all FakePost attributes are unicode."""
-        self.assertIsInstance(attr, UNICODE)
+    # def setUp(self):
+    #     """Set up fake_posts."""
+    #     from on_schedule import get_email_body
+    #     self.subscriber = SubscriberFactory.create(email=EMAIL)
+    #     self.email_body = get_email_body(self.subscriber, HTMLIZED_POSTS)
+    #     # self.duplicates = FakePost.create_batch_with_dupes(BATCH_SIZE)
 
-    @parameterized.expand(FAKE_HTMLIZED_POSTS)
-    def test_htmlize_unicode(self, post, htmlized_post):
+    @parameterized.expand(BATCH_PARAMS)
+    def test_doubletest(self, idx):
+        """Check if setting stuff up in __init__ works."""
+        post = self.fake_posts[idx]
+        self.assertIsInstance(post.title, UNICODE)
+
+    # @parameterized.expand(FAKE_POST_ATTRS)
+    # def test_unicode_attrs(self, attr):
+    #     """Ensure that all FakePost attributes are unicode."""
+    #     self.assertIsInstance(attr, UNICODE)
+
+    @parameterized.expand(BATCH_PARAMS)
+    def test_htmlize_unicode(self, idx):
         """Test that htmlize runs without breaking."""
+        htmlized_post = self.htmlized_posts[idx]
         self.assertIsInstance(htmlized_post, UNICODE)
 
-    @parameterized.expand(FAKE_HTMLIZED_POSTS)
-    def test_html_post_contains_title(self, post, htmlized_post):
+    @parameterized.expand(BATCH_PARAMS)
+    def test_html_post_contains_title(self, idx):
         """Ensure that all FakePost attributes are unicode."""
+        post = self.fake_posts[idx]
+        htmlized_post = self.htmlized_posts[idx]
         self.assertIn(post.title, htmlized_post)
 
-    @parameterized.expand(FAKE_HTMLIZED_POSTS)
-    def test_html_post_contains_url(self, post, htmlized_post):
+    @parameterized.expand(BATCH_PARAMS)
+    def test_html_post_contains_url(self, idx):
         """Ensure that all FakePost attributes are unicode."""
+        post = self.fake_posts[idx]
+        htmlized_post = self.htmlized_posts[idx]
         self.assertIn(post.url, htmlized_post)
 
-    @parameterized.expand(FAKE_HTMLIZED_POSTS)
-    def test_html_post_contains_permalink(self, post, htmlized_post):
-        """Ensure that all FakePost attributes are unicode."""
-        self.assertIn(post.permalink, htmlized_post)
+    # @parameterized.expand(FAKE_HTMLIZED_POSTS)
+    # def test_html_post_contains_permalink(self, post, htmlized_post):
+    #     """Ensure that all FakePost attributes are unicode."""
+    #     self.assertIn(post.permalink, htmlized_post)
 
-    @parameterized.expand(FAKE_HTMLIZED_POSTS)
-    def test_html_post_contains_subreddit(self, post, htmlized_post):
-        """Ensure that all FakePost attributes are unicode."""
-        self.assertIn(post.subreddit.display_name, htmlized_post)
+    # @parameterized.expand(FAKE_HTMLIZED_POSTS)
+    # def test_html_post_contains_subreddit(self, post, htmlized_post):
+    #     """Ensure that all FakePost attributes are unicode."""
+    #     self.assertIn(post.subreddit.display_name, htmlized_post)
 
-    @parameterized.expand(FAKE_HTMLIZED_POSTS)
-    def test_html_body_contains(self, post, htmlized_post):
-        """Ensure that htmlized posts are contained by email body."""
-        self.assertIn(htmlized_post, self.email_body)
+    # @parameterized.expand(FAKE_HTMLIZED_POSTS)
+    # def test_html_body_contains(self, post, htmlized_post):
+    #     """Ensure that htmlized posts are contained by email body."""
+    #     self.assertIn(htmlized_post, self.email_body)
 
-    def test_html_body_unsub_link(self):
-        """Ensure that all FakePost attributes are unicode."""
-        unsub_url = reverse(
-            'unsubscribe',
-            args=(self.subscriber.unsubscribe_hash, )
-        )
-        self.assertIn(unsub_url, self.email_body)
+    # def test_html_body_unsub_link(self):
+    #     """Ensure that all FakePost attributes are unicode."""
+    #     unsub_url = reverse(
+    #         'unsubscribe',
+    #         args=(self.subscriber.unsubscribe_hash, )
+    #     )
+    #     self.assertIn(unsub_url, self.email_body)
 
     # def test_dedupe_posts(self):
     #     """Test that urls of deduped posts is equal to set of those urls."""
