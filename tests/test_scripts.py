@@ -160,27 +160,31 @@ class FakePostsCase(TestCase):
 
     @parameterized.expand(BATCH_PARAMS)
     def test_html_post_contains_title(self, idx):
-        """Ensure that all FakePost attributes are unicode."""
+        """Ensure that all FakePost attributes in htmlized version."""
         post = self.fake_posts[idx]
         htmlized_post = self.htmlized_posts[idx]
         self.assertIn(post.title, htmlized_post)
 
     @parameterized.expand(BATCH_PARAMS)
     def test_html_post_contains_url(self, idx):
-        """Ensure that all FakePost attributes are unicode."""
+        """Ensure that all FakePost attributes in htmlized version."""
         post = self.fake_posts[idx]
         htmlized_post = self.htmlized_posts[idx]
         self.assertIn(post.url, htmlized_post)
 
-    # @parameterized.expand(FAKE_HTMLIZED_POSTS)
-    # def test_html_post_contains_permalink(self, post, htmlized_post):
-    #     """Ensure that all FakePost attributes are unicode."""
-    #     self.assertIn(post.permalink, htmlized_post)
+    @parameterized.expand(BATCH_PARAMS)
+    def test_html_post_contains_permalink(self, idx):
+        """Ensure that all FakePost attributes in htmlized version."""
+        post = self.fake_posts[idx]
+        htmlized_post = self.htmlized_posts[idx]
+        self.assertIn(post.permalink, htmlized_post)
 
-    # @parameterized.expand(FAKE_HTMLIZED_POSTS)
-    # def test_html_post_contains_subreddit(self, post, htmlized_post):
-    #     """Ensure that all FakePost attributes are unicode."""
-    #     self.assertIn(post.subreddit.display_name, htmlized_post)
+    @parameterized.expand(BATCH_PARAMS)
+    def test_html_post_contains_subreddit(self, idx):
+        """Ensure that all FakePost attributes in htmlized version."""
+        post = self.fake_posts[idx]
+        htmlized_post = self.htmlized_posts[idx]
+        self.assertIn(post.subreddit.display_name, htmlized_post)
 
     # @parameterized.expand(FAKE_HTMLIZED_POSTS)
     # def test_html_body_contains(self, post, htmlized_post):
