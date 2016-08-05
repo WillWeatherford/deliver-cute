@@ -1,0 +1,13 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Confirm Unsubscribe</title>
+</head>
+    <body>
+    <form action="" method="post">
+        {% csrf_token %}
+        <p>Are you sure you want to unsubscribe "{{ object }}"?</p>
+        <input type="submit" value="Confirm" />
+    </form>
+    </body>
+</html>

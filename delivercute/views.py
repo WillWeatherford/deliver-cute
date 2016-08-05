@@ -1,9 +1,10 @@
 """Views for Deliver Cute website."""
 
+from django.views.generic import CreateView, DeleteView
+from django.http import HttpResponseRedirect
+# from django.core.urlresolvers import reverse
 from subscribers.models import Subscriber
 from subscribers.forms import SubscriberForm
-from django.views.generic import CreateView
-from django.http import HttpResponseRedirect
 
 
 class Main(CreateView):
@@ -26,3 +27,11 @@ class Main(CreateView):
         instance.subreddits.add(*subreddits)
         self.object = instance
         return HttpResponseRedirect(self.get_success_url())
+
+
+class Unsubcribe(DeleteView):
+    """Prompt user to confirm they want to unsubscribe."""
+
+    success_url = '/'
+    model = Subscriber
+    slug_field = 'unsubscribe_hash'

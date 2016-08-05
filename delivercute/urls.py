@@ -13,12 +13,17 @@ Including another URLconf
     1. Import the include() function: from django.conf.urls import url, include
     2. Add a URL to urlpatterns:  url(r'^blog/', include('blog.urls'))
 """
+from __future__ import unicode_literals, absolute_import
 
 from django.conf.urls import url
 from django.contrib import admin
-from .views import Main
+from delivercute.views import Main, Unsubcribe
 
 urlpatterns = [
     url(r'^admin/', admin.site.urls),
-    url(r'^$', Main.as_view()),
+    url(r'^$', Main.as_view(), name='home'),
+    url(r'^unsubscribe/(?P<slug>[0-9a-f]+)/$',
+        Unsubcribe.as_view(),
+        name='unsubscribe',
+        )
 ]

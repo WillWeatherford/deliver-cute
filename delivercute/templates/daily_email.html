@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html>
+<body>
+
+<div id="images">
+    {% for post in posts %}
+        {{ post }}
+        <br>
+    {% endfor %}
+</div>
+
+<div id="unsubscribe">
+    <a href="{{ site_url }}{% url 'unsubscribe' slug=subscriber.unsubscribe_hash %}">
+        Unsubscribe from Deliver Cute
+    </a>
+</div>
+
+</body>
+</html>
