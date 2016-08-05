@@ -9,7 +9,7 @@ from django.core import mail
 from django.core.urlresolvers import reverse
 from nose_parameterized import parameterized
 
-from on_schedule import fix_image_links, htmlize_posts
+from on_schedule import fix_image_links
 from constants import SUBREDDIT_NAMES, LIMIT, EMAIL, UNICODE
 from tests.classes import (
     FakePost,
@@ -130,14 +130,16 @@ class FakePostsCase(TestCase):
 
     def __init__(self, *args, **kwargs):
         """Initialize data groups."""
+        from on_schedule import htmlize_posts
         super(FakePostsCase, self).__init__(*args, **kwargs)
         self.fake_posts = FakePost.create_batch(BATCH_SIZE)
         self.htmlized_posts = list(htmlize_posts(self.fake_posts))
 
-    # def setUp(self):
-    #     """Set up fake_posts."""
-    #     from on_schedule import get_email_body
-    #     self.subscriber = SubscriberFactory.create(email=EMAIL)
+    def setUp(self):
+        """Set up fake_posts."""
+        from on_schedule import get_email_body
+        self.subscriber = SubscriberFactory.create(email=EMAIL)
+        self.email_body = get_email_body(self.subscriber, self.htmlized_posts)
     #     self.email_body = get_email_body(self.subscriber, HTMLIZED_POSTS)
     #     # self.duplicates = FakePost.create_batch_with_dupes(BATCH_SIZE)
 
@@ -186,18 +188,17 @@ class FakePostsCase(TestCase):
         htmlized_post = self.htmlized_posts[idx]
         self.assertIn(post.subreddit.display_name, htmlized_post)
 
-    # @parameterized.expand(FAKE_HTMLIZED_POSTS)
-    # def test_html_body_contains(self, post, htmlized_post):
-    #     """Ensure that htmlized posts are contained by email body."""
-    #     self.assertIn(htmlized_post, self.email_body)
+    @parameterized.expand(BATCH_PARAMS)
+    def test_html_body_contains(self, idx):
+        """Ensure that htmlized posts are contained by email body."""
+        htmlized_post = self.htmlized_posts[idx]
+        self.assertIn(htmlized_post, self.email_body)
 
-    # def test_html_body_unsub_link(self):
-    #     """Ensure that all FakePost attributes are unicode."""
-    #     unsub_url = reverse(
-    #         'unsubscribe',
-    #         args=(self.subscriber.unsubscribe_hash, )
-    #     )
-    #     self.assertIn(unsub_url, self.email_body)
+    def test_html_body_unsub_link(self):
+        """Ensure that all FakePost attributes are unicode."""
+        hash_ = self.subscriber.unsubscribe_hash
+        unsub_url = reverse('unsubscribe', args=(hash_, ))
+        self.assertIn(unsub_url, self.email_body)
 
     # def test_dedupe_posts(self):
     #     """Test that urls of deduped posts is equal to set of those urls."""
