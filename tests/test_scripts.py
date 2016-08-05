@@ -254,8 +254,9 @@ class CheckURLCase(TestCase):
 class DebugCase(TestCase):
     """Run full on_schedule script in debug mode."""
 
-    def setUp(self):
-        """Add debug user with project email to test database."""
+    def __init__(self):
+        from on_schedule import htmlize_posts
+        super(DebugCase, self).__init__(*args, **kwargs)
         from on_schedule import main
         self.subreddits = SubRedditFactory.create_random_batch()
         self.subscriber = SubscriberFactory.create(email=EMAIL)
