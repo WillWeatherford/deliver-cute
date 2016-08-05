@@ -17,6 +17,7 @@ from tests.classes import (
     SubRedditFactory,
     BATCH_SIZE,
     BATCH_PARAMS,
+    ATTR_PARAMS,
     # SUBR_BATCH_SIZE,
     # SUBR_PARAMS,
     SUBR_NAME_PARAMS,
@@ -24,12 +25,11 @@ from tests.classes import (
 
 # TODO
 # test unicode status of incoming PRAW post objects
-# test encoding of outgoing html
+# test escaped HTML of outgoing html
 #   test fix_urls
 #       make some bad urls
 #   test sort_urls
 #   test subscribers_for_now
-#   test email outbox
 
 # edge cases:
 #   unsorted
@@ -116,14 +116,6 @@ class RedditAPICase(TestCase):
     #     """Test that number of links is at or under the limit per subreddit."""
     #     self.assertLessEqual(len(self.all_posts[name]), LIMIT)
 
-FAKE_POSTS = FakePost.create_batch(BATCH_SIZE)
-# FAKE_POST_ARGS = ((p, ) for p in FAKE_POSTS)
-FAKE_POST_ATTRS = ((attr, ) for attr in chain(
-    *((p.title, p.url, p.permalink, p.subreddit.display_name)
-      for p in FAKE_POSTS)))
-# HTMLIZED_POSTS = list(htmlize_posts(FAKE_POSTS))
-# FAKE_HTMLIZED_POSTS = zip(FAKE_POSTS, HTMLIZED_POSTS)
-
 
 class FakePostsCase(TestCase):
     """Using fake posts to test unicode and html escaping."""
@@ -133,26 +125,23 @@ class FakePostsCase(TestCase):
         from on_schedule import htmlize_posts
         super(FakePostsCase, self).__init__(*args, **kwargs)
         self.fake_posts = FakePost.create_batch(BATCH_SIZE)
+        self.fake_post_attrs = list(chain(
+            *((p.title, p.url, p.permalink, p.subreddit.display_name)
+              for p in self.fake_posts)))
         self.htmlized_posts = list(htmlize_posts(self.fake_posts))
+        self.duplicates = FakePost.create_batch_with_dupes(BATCH_SIZE)
 
     def setUp(self):
         """Set up fake_posts."""
         from on_schedule import get_email_body
         self.subscriber = SubscriberFactory.create(email=EMAIL)
         self.email_body = get_email_body(self.subscriber, self.htmlized_posts)
-    #     self.email_body = get_email_body(self.subscriber, HTMLIZED_POSTS)
-    #     # self.duplicates = FakePost.create_batch_with_dupes(BATCH_SIZE)
 
-    @parameterized.expand(BATCH_PARAMS)
-    def test_doubletest(self, idx):
-        """Check if setting stuff up in __init__ works."""
-        post = self.fake_posts[idx]
-        self.assertIsInstance(post.title, UNICODE)
-
-    # @parameterized.expand(FAKE_POST_ATTRS)
-    # def test_unicode_attrs(self, attr):
-    #     """Ensure that all FakePost attributes are unicode."""
-    #     self.assertIsInstance(attr, UNICODE)
+    @parameterized.expand(ATTR_PARAMS)
+    def test_unicode_attrs(self, idx):
+        """Ensure that all FakePost attributes are unicode."""
+        attr = self.fake_post_attrs[idx]
+        self.assertIsInstance(attr, UNICODE)
 
     @parameterized.expand(BATCH_PARAMS)
     def test_htmlize_unicode(self, idx):
@@ -189,25 +178,29 @@ class FakePostsCase(TestCase):
         self.assertIn(post.subreddit.display_name, htmlized_post)
 
     @parameterized.expand(BATCH_PARAMS)
-    def test_html_body_contains(self, idx):
+    def test_email_body_contains(self, idx):
         """Ensure that htmlized posts are contained by email body."""
         htmlized_post = self.htmlized_posts[idx]
         self.assertIn(htmlized_post, self.email_body)
 
-    def test_html_body_unsub_link(self):
+    def test_email_body_unsub_link(self):
         """Ensure that all FakePost attributes are unicode."""
         hash_ = self.subscriber.unsubscribe_hash
         unsub_url = reverse('unsubscribe', args=(hash_, ))
         self.assertIn(unsub_url, self.email_body)
 
-    # def test_dedupe_posts(self):
-    #     """Test that urls of deduped posts is equal to set of those urls."""
-    #     from on_schedule import dedupe_posts
-    #     deduped_urls = [post.url for post in dedupe_posts(self.duplicates)]
-    #     self.assertEqual(
-    #         list(sorted(deduped_urls)),
-    #         list(sorted(set(deduped_urls)))
-    #     )
+    def test_email_body_unicode(self):
+        """Ensure that all FakePost attributes are unicode."""
+        self.assertIsInstance(self.email_body, UNICODE)
+
+    def test_dedupe_posts(self):
+        """Test that urls of deduped posts is equal to set of those urls."""
+        from on_schedule import dedupe_posts
+        deduped_urls = [post.url for post in dedupe_posts(self.duplicates)]
+        self.assertEqual(
+            list(sorted(deduped_urls)),
+            list(sorted(set(deduped_urls)))
+        )
 
     # test html escaping by checking for &quot, \u2018 etc.
 
