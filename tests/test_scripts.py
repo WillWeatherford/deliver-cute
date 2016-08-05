@@ -122,8 +122,8 @@ class FakePostsCase(TestCase):
 
     def __init__(self, *args, **kwargs):
         """Initialize data groups."""
-        from on_schedule import htmlize_posts
         super(FakePostsCase, self).__init__(*args, **kwargs)
+        from on_schedule import htmlize_posts
         self.fake_posts = FakePost.create_batch(BATCH_SIZE)
         self.fake_post_attrs = list(chain(
             *((p.title, p.url, p.permalink, p.subreddit.display_name)
@@ -254,9 +254,13 @@ class CheckURLCase(TestCase):
 class DebugCase(TestCase):
     """Run full on_schedule script in debug mode."""
 
-    def __init__(self):
-        from on_schedule import htmlize_posts
+    def __init__(self, *args, **kwargs):
+        """Initialize."""
         super(DebugCase, self).__init__(*args, **kwargs)
+        pass
+
+    def setUp(self):
+        """Set up for testing."""
         from on_schedule import main
         self.subreddits = SubRedditFactory.create_random_batch()
         self.subscriber = SubscriberFactory.create(email=EMAIL)
