@@ -52,10 +52,6 @@ def main(debug):
         print('No subscribers want cute delivered at {}'.format(now.hour))
         return 0
 
-    # subreddit_names = chain(*(s.subreddit_names() for s in subscribers))
-    # post_map = create_post_map(subreddit_names, LIMIT)
-
-    # server = setup_email_server(EMAIL, APP_PASSWORD)
     subject = get_email_subject(debug)
 
     reddit = praw.Reddit(user_agent=USER_AGENT)
@@ -64,22 +60,19 @@ def main(debug):
     post_map = {}
     found_posts = set()
     for subscriber in subscribers:
-        subreddit_names = set(subscriber.subreddit_names()) - post_map.keys()
-        # posts = get_relevant_posts(post_map, subscriber)
-        posts = get_posts_from_reddit(reddit, subreddit_names, LIMIT)
-        posts = fix_image_links(posts)
-        posts = dedupe_posts(posts)
-        posts = sort_posts(posts)
-        posts = htmlize_posts(posts)
-        body = get_email_body(subscriber, posts)
+        posts_to_send = []
+        for name in subscriber.subreddit_names():
+            posts = post_map.setdefault(
+                name,
+                process_new_posts(reddit, name, LIMIT, found_posts)
+            )
+            posts_to_send.extend(posts)
+        body = get_email_body(subscriber, posts_to_send)
         sent_count += send_mail(
             subject, 'DEBUG', EMAIL, [subscriber.email],
             html_message=body,
             fail_silently=False,
-            # server, EMAIL, FROM_NAME, subscriber.email, subject, body
         )
-
-    # server.quit()
     return sent_count
 
 
@@ -91,9 +84,19 @@ def subscribers_for_now(debug):
     return Subscriber.objects.filter(send_hour=now.hour)
 
 
-def get_posts_from_reddit(reddit, subreddit_names, limit):
+def process_new_posts(reddit, subreddit_name, limit, found_posts):
+    """Process new posts from subreddit into ready-to-email html."""
+    posts = get_posts_from_reddit(reddit, subreddit_name, LIMIT)
+    posts = fix_image_links(posts)
+    posts = dedupe_posts(posts, found_posts)
+    posts = sort_posts(posts)
+    posts = htmlize_posts(posts)
+    return posts
+
+
+def get_posts_from_reddit(reddit, subreddit_name, limit):
     """Get subreddit names from given subreddit name."""
-    subreddit = reddit.get_subreddit(name)
+    subreddit = reddit.get_subreddit(subreddit_name)
     return subreddit.get_top_from_day(limit=limit)
 
 
@@ -115,13 +118,12 @@ def get_relevant_posts(post_map, subscriber):
             yield post
 
 
-def dedupe_posts(posts):
+def dedupe_posts(posts, found_posts):
     """Generate posts where duplicates have been removed by comparing url."""
-    found_already = set()
     for post in posts:
-        if post.url not in found_already:
+        if post.url not in found_posts:
             yield post
-            found_already.add(post.url)
+            found_posts.add(post.url)
         else:
             print('Omitting duplicate {}'.format(post.url))
 
