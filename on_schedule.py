@@ -52,15 +52,21 @@ def main(debug):
         print('No subscribers want cute delivered at {}'.format(now.hour))
         return 0
 
-    subreddit_names = chain(*(s.subreddit_names() for s in subscribers))
-    post_map = create_post_map(subreddit_names, LIMIT)
+    # subreddit_names = chain(*(s.subreddit_names() for s in subscribers))
+    # post_map = create_post_map(subreddit_names, LIMIT)
 
     # server = setup_email_server(EMAIL, APP_PASSWORD)
     subject = get_email_subject(debug)
 
+    reddit = praw.Reddit(user_agent=USER_AGENT)
+
     sent_count = 0
+    post_map = {}
+    found_posts = set()
     for subscriber in subscribers:
-        posts = get_relevant_posts(post_map, subscriber)
+        subreddit_names = set(subscriber.subreddit_names()) - post_map.keys()
+        # posts = get_relevant_posts(post_map, subscriber)
+        posts = get_posts_from_reddit(reddit, subreddit_names, LIMIT)
         posts = fix_image_links(posts)
         posts = dedupe_posts(posts)
         posts = sort_posts(posts)
@@ -83,6 +89,12 @@ def subscribers_for_now(debug):
         return Subscriber.objects.filter(email=EMAIL)
     now = datetime.now(tz=timezone('US/Pacific'))
     return Subscriber.objects.filter(send_hour=now.hour)
+
+
+def get_posts_from_reddit(reddit, subreddit_names, limit):
+    """Get subreddit names from given subreddit name."""
+    subreddit = reddit.get_subreddit(name)
+    return subreddit.get_top_from_day(limit=limit)
 
 
 def create_post_map(subreddit_names, limit):
