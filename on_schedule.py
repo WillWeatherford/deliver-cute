@@ -21,18 +21,17 @@ import smtplib
 import calendar
 import requests
 from pytz import timezone
-from itertools import chain
 from bs4 import BeautifulSoup
 from operator import attrgetter
 from datetime import date, datetime
 # from email.mime.text import MIMEText
 # from email.mime.multipart import MIMEMultipart
-from constants import LIMIT, EMAIL, APP_PASSWORD
-django.setup()
+from constants import LIMIT, EMAIL
 from django.conf import settings
-from subscribers.models import Subscriber
 from django.core.mail import send_mail
 from django.template.loader import render_to_string
+django.setup()
+from subscribers.models import Subscriber
 
 USER_AGENT = 'python:deliver_cute:v1.0 (by /u/____OOOO____)'
 
@@ -62,11 +61,15 @@ def main(debug):
     for subscriber in subscribers:
         posts_to_send = []
         for name in subscriber.subreddit_names():
-            posts = post_map.setdefault(
-                name,
-                process_new_posts(reddit, name, LIMIT, found_posts)
-            )
-            posts_to_send.extend(posts)
+            try:
+                posts_to_send.extend(post_map['posts'])
+            except KeyError:
+                posts = get_posts_from_reddit(reddit, name, LIMIT)
+                posts = fix_image_links(posts)
+                posts = dedupe_posts(posts, found_posts)
+                posts = sort_posts(posts)
+                posts_to_send.extend(htmlize_posts(posts))
+
         body = get_email_body(subscriber, posts_to_send)
         sent_count += send_mail(
             subject, 'DEBUG', EMAIL, [subscriber.email],
@@ -82,16 +85,6 @@ def subscribers_for_now(debug):
         return Subscriber.objects.filter(email=EMAIL)
     now = datetime.now(tz=timezone('US/Pacific'))
     return Subscriber.objects.filter(send_hour=now.hour)
-
-
-def process_new_posts(reddit, subreddit_name, limit, found_posts):
-    """Process new posts from subreddit into ready-to-email html."""
-    posts = get_posts_from_reddit(reddit, subreddit_name, LIMIT)
-    posts = fix_image_links(posts)
-    posts = dedupe_posts(posts, found_posts)
-    posts = sort_posts(posts)
-    posts = htmlize_posts(posts)
-    return posts
 
 
 def get_posts_from_reddit(reddit, subreddit_name, limit):
