@@ -11,6 +11,7 @@ from subscribers.models import Subscriber
 from nose_parameterized import parameterized
 
 HOME = reverse('home')
+SUCCESS = reverse('success')
 
 # Load form.
 # Input to form.
@@ -24,6 +25,7 @@ HOME = reverse('home')
 # unsubscribe only some of many users
 
 
+# parameterize by iterating over sets of input params
 def good_params():
     """Generate good parameters to post on main form."""
     fake = Faker()
@@ -33,18 +35,6 @@ def good_params():
                   'subreddits': [],
                   }
         yield (params, )
-
-# GOOD_PARAMS = {
-#     'email': fake.email(),
-#     'send_hour': str(random.randrange(24)),
-#     # 'subreddits': [str(n) for n in random.sample(
-#     #     range(1, len(SUBREDDIT_NAMES) + 1),
-#     #     random.randrange(1, len(SUBREDDIT_NAMES) + 1)
-#     # )],
-# }
-
-
-#parameterize by iterating over sets of input params
 
 
 class UnAuthCase(TestCase):
@@ -69,7 +59,7 @@ class UnAuthCase(TestCase):
     def test_good_post_redirect(self, params):
         """Test subscribers register properly in database with good params."""
         response = self.client.post(HOME, params, follow=True)
-        self.assertRedirects(response, HOME, status_code=302)
+        self.assertRedirects(response, SUCCESS, status_code=302)
 
     @parameterized.expand(good_params)
     def test_good_post_200(self, params):
