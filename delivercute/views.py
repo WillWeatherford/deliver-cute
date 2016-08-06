@@ -2,7 +2,7 @@
 
 from django.views.generic import CreateView, DeleteView
 from django.http import HttpResponseRedirect
-# from django.core.urlresolvers import reverse
+from django.core.urlresolvers import reverse_lazy
 from subscribers.models import Subscriber
 from subscribers.forms import SubscriberForm
 
@@ -12,9 +12,8 @@ class Main(CreateView):
 
     template_name = 'main.html'
     model = Subscriber
-    # form_class = "subscribers.forms.SubscriberForm"
     form_class = SubscriberForm
-    success_url = '/'
+    success_url = reverse_lazy('home')
 
     def form_valid(self, form):
         """Create new Subscriber instance or update if already in database."""
@@ -33,6 +32,6 @@ class Main(CreateView):
 class Unsubcribe(DeleteView):
     """Prompt user to confirm they want to unsubscribe."""
 
-    success_url = '/'
+    success_url = reverse_lazy('home')
     model = Subscriber
     slug_field = 'unsubscribe_hash'
