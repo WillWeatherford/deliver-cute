@@ -45,3 +45,9 @@ class SubReddit(md.Model):
     def __str__(self):
         """String representation of subreddit's display name."""
         return self.display_name
+
+    @classmethod
+    def all_pks(cls):
+        """Generate the pks of all SubReddits for preselected form defaults."""
+        for sr in cls.objects.all():
+            yield sr.pk

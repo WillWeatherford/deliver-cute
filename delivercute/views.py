@@ -12,6 +12,7 @@ class Main(CreateView):
 
     template_name = 'main.html'
     model = Subscriber
+    # form_class = "subscribers.forms.SubscriberForm"
     form_class = SubscriberForm
     success_url = '/'
 
