@@ -5,6 +5,7 @@ from django.http import HttpResponseRedirect
 from django.core.urlresolvers import reverse_lazy
 from subscribers.models import Subscriber
 from subscribers.forms import SubscriberForm
+from constants import SUCCESS_MSG
 
 
 class Main(CreateView):
@@ -13,7 +14,6 @@ class Main(CreateView):
     template_name = 'main.html'
     model = Subscriber
     form_class = SubscriberForm
-    # success_url = reverse_lazy('success')
 
     def form_valid(self, form):
         """Create new Subscriber instance or update if already in database."""
@@ -26,7 +26,9 @@ class Main(CreateView):
         instance.save()
         instance.subreddits.add(*subreddits)
         self.object = instance
-        url = reverse_lazy('success', args=('new' * created or 'update', ))
+        url = reverse_lazy('success', kwargs={
+            'status': 'new' * created or 'update'
+        })
         return HttpResponseRedirect(url)
 
 
@@ -34,6 +36,12 @@ class Success(TemplateView):
     """Simple view giving success message after subscribe or update."""
 
     template_name = 'success.html'
+
+    def get_context_data(self, *args, **kwargs):
+        """Insert new or updated subscriber message into template."""
+        data = super(Success, self).get_context_data(*args, **kwargs)
+        data['message'] = SUCCESS_MSG[data['status']]
+        return data
 
 
 class Unsubcribe(DeleteView):

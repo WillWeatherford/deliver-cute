@@ -11,7 +11,7 @@ from subscribers.models import Subscriber
 from nose_parameterized import parameterized
 
 HOME = reverse('home')
-SUCCESS_NEW = reverse('success', args=('new',))
+SUCCESS_NEW = reverse('success', kwargs={'status': 'new'})
 
 # Load form.
 # Input to form.

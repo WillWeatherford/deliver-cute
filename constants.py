@@ -32,3 +32,8 @@ SUBREDDIT_NAMES = [
 ]
 
 LIMIT = 10
+
+SUCCESS_MSG = {
+    'new': 'Thanks for subscribing to Deliver Cute!',
+    'update': 'Subscription updated.',
+}
