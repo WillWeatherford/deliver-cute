@@ -11,7 +11,7 @@ from subscribers.models import Subscriber
 from nose_parameterized import parameterized
 
 HOME = reverse('home')
-SUCCESS = reverse('success')
+SUCCESS_NEW = reverse('success', args=('new',))
 
 # Load form.
 # Input to form.
@@ -59,7 +59,7 @@ class UnAuthCase(TestCase):
     def test_good_post_redirect(self, params):
         """Test subscribers register properly in database with good params."""
         response = self.client.post(HOME, params, follow=True)
-        self.assertRedirects(response, SUCCESS, status_code=302)
+        self.assertRedirects(response, SUCCESS_NEW, status_code=302)
 
     @parameterized.expand(good_params)
     def test_good_post_200(self, params):

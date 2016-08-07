@@ -13,7 +13,7 @@ class Main(CreateView):
     template_name = 'main.html'
     model = Subscriber
     form_class = SubscriberForm
-    success_url = reverse_lazy('success')
+    # success_url = reverse_lazy('success')
 
     def form_valid(self, form):
         """Create new Subscriber instance or update if already in database."""
@@ -26,7 +26,8 @@ class Main(CreateView):
         instance.save()
         instance.subreddits.add(*subreddits)
         self.object = instance
-        return HttpResponseRedirect(self.get_success_url())
+        url = reverse_lazy('success', args=('new' * created or 'update', ))
+        return HttpResponseRedirect(url)
 
 
 class Success(TemplateView):
