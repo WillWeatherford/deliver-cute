@@ -254,26 +254,28 @@ class CheckURLCase(TestCase):
 class DebugCase(TestCase):
     """Run full on_schedule script in debug mode."""
 
-    def setUp(self):
+    @classmethod
+    def setUpTestData(cls):
         """Set up for testing."""
         from on_schedule import main
-        self.subreddits = SubRedditFactory.create_random_batch()
-        self.subscriber = SubscriberFactory.create(email=EMAIL)
-        self.subscriber.subreddits.add(*self.subreddits)
-        self.result = main(True)
+        cls.subreddits = SubRedditFactory.create_random_batch()
+        cls.subscriber = SubscriberFactory.create(email=EMAIL)
+        cls.subscriber.subreddits.add(*cls.subreddits)
+        cls.result = main(True)
+        cls.emails = mail.outbox
 
     def test_main(self):
         """Test the main() function of on_schedule.py in debug mode."""
-        self.result = self.assertEqual(self.result, 1)
+        self.assertEqual(self.result, 1)
 
-    # def test_outbox(self):
-    #     """Test sending an email."""
-    #     self.assertEqual(len(mail.outbox), 1)
+    def test_outbox(self):
+        """Test sending an email."""
+        self.assertEqual(len(self.emails), 1)
 
-    # def test_recipient(self):
-    #     """Test sending an email."""
-    #     email = mail.outbox[0]
-    #     self.assertEqual(self.subscriber.email, email.to[0])
+    def test_recipient(self):
+        """Test sending an email."""
+        email = self.emails[0]
+        self.assertEqual(self.subscriber.email, email.to[0])
 
     # def test_unsubscribe_link(self):
     #     """Check that unsubscribe link is in outgoing email."""
