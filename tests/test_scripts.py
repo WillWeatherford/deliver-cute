@@ -257,25 +257,34 @@ class DebugCase(TestCase):
     @classmethod
     def setUpTestData(cls):
         """Set up for testing."""
+        from pytz import timezone
         from on_schedule import main
+        from datetime import datetime
+        now = datetime.now(tz=timezone('US/Pacific'))
         cls.subreddits = SubRedditFactory.create_random_batch()
-        cls.subscriber = SubscriberFactory.create(email=EMAIL)
-        cls.subscriber.subreddits.add(*cls.subreddits)
-        cls.result = main(True)
+        cls.subscribers = SubscriberFactory.create_batch(
+            BATCH_SIZE,
+            send_hour=now.hour,
+        )
+        for s in cls.subscribers:
+            s.subreddits.add(*cls.subreddits)
+        cls.result = main(False)
         cls.emails = mail.outbox
 
     def test_main(self):
         """Test the main() function of on_schedule.py in debug mode."""
-        self.assertEqual(self.result, 1)
+        self.assertEqual(self.result, BATCH_SIZE)
 
     def test_outbox(self):
         """Test sending an email."""
-        self.assertEqual(len(self.emails), 1)
+        self.assertEqual(len(self.emails), BATCH_SIZE)
 
-    def test_recipient(self):
+    @parameterized.expand([(n, ) for n in range(BATCH_SIZE)])
+    def test_recipient(self, idx):
         """Test sending an email."""
-        email = self.emails[0]
-        self.assertEqual(self.subscriber.email, email.to[0])
+        email = self.emails[idx]
+        subscriber = self.subscribers[idx]
+        self.assertEqual(subscriber.email, email.to[0])
 
     # def test_unsubscribe_link(self):
     #     """Check that unsubscribe link is in outgoing email."""
