@@ -251,7 +251,7 @@ class CheckURLCase(TestCase):
 #     send_email(WILL_EMAIL, WILL_EMAIL, [WILL_EMAIL], 'ESCAPE TEST', body)
 
 
-class DebugCase(TestCase):
+class ManyEmailsCase(TestCase):
     """Run full on_schedule script in debug mode."""
 
     @classmethod
@@ -279,18 +279,20 @@ class DebugCase(TestCase):
         """Test sending an email."""
         self.assertEqual(len(self.emails), BATCH_SIZE)
 
-    @parameterized.expand([(n, ) for n in range(BATCH_SIZE)])
+    @parameterized.expand(BATCH_PARAMS)
     def test_recipient(self, idx):
         """Test sending an email."""
         email = self.emails[idx]
         subscriber = self.subscribers[idx]
         self.assertEqual(subscriber.email, email.to[0])
 
-    # def test_unsubscribe_link(self):
-    #     """Check that unsubscribe link is in outgoing email."""
-    #     email = mail.outbox[0]
-    #     unsub_url = reverse(
-    #         'unsubscribe',
-    #         args=(self.subscriber.unsubscribe_hash, )
-    #     )
-    #     self.assertIn(unsub_url, email.alternatives[0][0])
+    @parameterized.expand(BATCH_PARAMS)
+    def test_unsubscribe_link(self, idx):
+        """Check that unsubscribe link is in outgoing email."""
+        email = self.emails[idx]
+        subscriber = self.subscribers[idx]
+        unsub_url = reverse(
+            'unsubscribe',
+            kwargs={'slug': subscriber.unsubscribe_hash}
+        )
+        self.assertIn(unsub_url, email.alternatives[0][0])
