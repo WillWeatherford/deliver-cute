@@ -62,20 +62,24 @@ def main(debug):
         posts_to_send = []
         for name in subscriber.subreddit_names():
             try:
-                posts_to_send.extend(post_map['posts'])
+                posts_to_send.extend(post_map[name])
             except KeyError:
                 posts = get_posts_from_reddit(reddit, name, LIMIT)
                 posts = fix_image_links(posts)
                 posts = dedupe_posts(posts, found_posts)
                 posts = sort_posts(posts)
-                posts_to_send.extend(htmlize_posts(posts))
+                posts = list(htmlize_posts(posts))
+                post_map[name] = posts
+                posts_to_send.extend(posts)
 
         body = get_email_body(subscriber, posts_to_send)
+        print('Sending email to {}...'.format(subscriber.email))
         sent_count += send_mail(
             subject, 'DEBUG', EMAIL, [subscriber.email],
             html_message=body,
             fail_silently=False,
         )
+        print('Email sent to {}...'.format(subscriber.email))
     return sent_count
 
 

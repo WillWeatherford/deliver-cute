@@ -254,11 +254,6 @@ class CheckURLCase(TestCase):
 class DebugCase(TestCase):
     """Run full on_schedule script in debug mode."""
 
-    def __init__(self, *args, **kwargs):
-        """Initialize."""
-        super(DebugCase, self).__init__(*args, **kwargs)
-        pass
-
     def setUp(self):
         """Set up for testing."""
         from on_schedule import main
@@ -271,20 +266,20 @@ class DebugCase(TestCase):
         """Test the main() function of on_schedule.py in debug mode."""
         self.result = self.assertEqual(self.result, 1)
 
-    def test_outbox(self):
-        """Test sending an email."""
-        self.assertEqual(len(mail.outbox), 1)
+    # def test_outbox(self):
+    #     """Test sending an email."""
+    #     self.assertEqual(len(mail.outbox), 1)
 
-    def test_recipient(self):
-        """Test sending an email."""
-        email = mail.outbox[0]
-        self.assertEqual(self.subscriber.email, email.to[0])
+    # def test_recipient(self):
+    #     """Test sending an email."""
+    #     email = mail.outbox[0]
+    #     self.assertEqual(self.subscriber.email, email.to[0])
 
-    def test_unsubscribe_link(self):
-        """Check that unsubscribe link is in outgoing email."""
-        email = mail.outbox[0]
-        unsub_url = reverse(
-            'unsubscribe',
-            args=(self.subscriber.unsubscribe_hash, )
-        )
-        self.assertIn(unsub_url, email.alternatives[0][0])
+    # def test_unsubscribe_link(self):
+    #     """Check that unsubscribe link is in outgoing email."""
+    #     email = mail.outbox[0]
+    #     unsub_url = reverse(
+    #         'unsubscribe',
+    #         args=(self.subscriber.unsubscribe_hash, )
+    #     )
+    #     self.assertIn(unsub_url, email.alternatives[0][0])
