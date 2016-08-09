@@ -87,17 +87,6 @@ def get_posts_from_reddit(reddit, subreddit_name, limit):
     return subreddit.get_top_from_day(limit=limit)
 
 
-def create_post_map(subreddit_names, limit):
-    """Return dictionary with keys of subreddit names at given post limit."""
-    reddit = praw.Reddit(user_agent=USER_AGENT)
-    post_map = dict.fromkeys(subreddit_names)
-    for name in post_map:
-        subreddit = reddit.get_subreddit(name)
-        new_posts = subreddit.get_top_from_day(limit=limit)
-        post_map[name] = list(new_posts)
-    return post_map
-
-
 def get_relevant_posts(post_map, subscriber):
     """Filter only those posts selected by the current subscriber."""
     for subreddit_name in subscriber.subreddit_names():
