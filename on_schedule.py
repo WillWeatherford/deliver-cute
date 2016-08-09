@@ -26,7 +26,7 @@ from subscribers.models import Subscriber
 
 USER_AGENT = 'python:deliver_cute:v1.0 (by /u/____OOOO____)'
 TXT_CONTENT = 'Plain text message.'
-EMAIL_SUBJECT_TEMPLATE = '{debug}Cute Pics for {date}'
+EMAIL_SUBJECT_TEMPLATE = '{debug}Cute Pics for {d}, {m} {i} {y}'
 FROM_NAME = 'Deliver Cute'
 PIC_WIDTH = '400'
 
@@ -57,11 +57,12 @@ def main(debug):
                 posts = get_posts_from_reddit(reddit, name, LIMIT)
                 posts = fix_image_links(posts)
                 posts = dedupe_posts(posts, found_posts)
-                posts = sort_posts(posts)
-                posts = list(htmlize_posts(posts))
+                posts = list(posts)
                 post_map[name] = posts
                 posts_to_send.extend(posts)
 
+        posts_to_send = sort_posts(posts_to_send)
+        posts_to_send = htmlize_posts(posts_to_send)
         body = get_email_body(subscriber, posts_to_send)
         sent_count += send_email(subject, subscriber, body)
         print('Email sent to {}...'.format(subscriber.email))
@@ -173,15 +174,13 @@ def get_email_subject(debug):
     today = date.today()
     day_name = calendar.day_name[today.weekday()]
     month_name = calendar.month_name[today.month]
-    today_date_str = '{d}, {m} {i} {y}'.format(
+    return EMAIL_SUBJECT_TEMPLATE.format(
+        debug='DEBUG ' * debug,
         d=day_name,
         m=month_name,
         i=today.day,
         y=today.year,
     )
-    return EMAIL_SUBJECT_TEMPLATE.format(
-        debug='DEBUG ' * debug,
-        date=today_date_str)
 
 
 def send_email(subject, subscriber, body):
