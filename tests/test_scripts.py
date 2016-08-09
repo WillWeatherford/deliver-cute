@@ -1,6 +1,7 @@
 """Test functions for deliver_cute project."""
 from __future__ import unicode_literals, absolute_import
 
+import re
 import random
 from string import ascii_letters, digits
 from itertools import product, chain
@@ -71,11 +72,9 @@ class EmailCase(TestCase):
 
     def setUp(self):
         """Send an email."""
-        mail.send_mail(
-            SUBJECT, TEXT, EMAIL, [EMAIL],
-            html_message=BODY,
-            fail_silently=False,
-        )
+        from on_schedule import send_email
+        self.subscriber = SubscriberFactory.create(email=EMAIL)
+        send_email(SUBJECT, self.subscriber, BODY)
 
     def test_outbox(self):
         """Test sending an email."""
@@ -90,20 +89,20 @@ class EmailCase(TestCase):
 class RedditAPICase(TestCase):
     """Test retrieval of posts from reddit API."""
 
-    def setUp(self):
-        """Get post data to test."""
-        from on_schedule import create_post_map
-        # test with different limits
-        self.no_posts = create_post_map([], LIMIT)
-        self.all_posts = create_post_map(SUBREDDIT_NAMES, LIMIT)
+    # def setUp(self):
+    #     """Get post data to test."""
+    #     from on_schedule import create_post_map
+    #     # test with different limits
+    #     self.no_posts = create_post_map([], LIMIT)
+    #     self.all_posts = create_post_map(SUBREDDIT_NAMES, LIMIT)
 
-    def test_no_subreddits(self):
-        """Confirm that zero subreddits returns an empty dictionary."""
-        self.assertEqual(self.no_posts, {})
+    # def test_no_subreddits(self):
+    #     """Confirm that zero subreddits returns an empty dictionary."""
+    #     self.assertEqual(self.no_posts, {})
 
-    def test_dictionary(self):
-        """Confirm that given subreddits returns a dictionary."""
-        self.assertIsInstance(self.all_posts, dict)
+    # def test_dictionary(self):
+    #     """Confirm that given subreddits returns a dictionary."""
+    #     self.assertIsInstance(self.all_posts, dict)
 
     # @parameterized.expand(SUBR_NAME_PARAMS)
     # def test_cute_posts(self, name):
@@ -120,16 +119,16 @@ class RedditAPICase(TestCase):
 class FakePostsCase(TestCase):
     """Using fake posts to test unicode and html escaping."""
 
-    def __init__(self, *args, **kwargs):
+    @classmethod
+    def setUpTestData(cls):
         """Initialize data groups."""
-        super(FakePostsCase, self).__init__(*args, **kwargs)
         from on_schedule import htmlize_posts
-        self.fake_posts = FakePost.create_batch(BATCH_SIZE)
-        self.fake_post_attrs = list(chain(
+        cls.fake_posts = FakePost.create_batch(BATCH_SIZE)
+        cls.fake_post_attrs = list(chain(
             *((p.title, p.url, p.permalink, p.subreddit.display_name)
-              for p in self.fake_posts)))
-        self.htmlized_posts = list(htmlize_posts(self.fake_posts))
-        self.duplicates = FakePost.create_batch_with_dupes(BATCH_SIZE)
+              for p in cls.fake_posts)))
+        cls.htmlized_posts = list(htmlize_posts(cls.fake_posts))
+        cls.duplicates = FakePost.create_batch_with_dupes(BATCH_SIZE)
 
     def setUp(self):
         """Set up fake_posts."""
@@ -251,40 +250,58 @@ class CheckURLCase(TestCase):
 #     send_email(WILL_EMAIL, WILL_EMAIL, [WILL_EMAIL], 'ESCAPE TEST', body)
 
 
-class DebugCase(TestCase):
+class ManyEmailsCase(TestCase):
     """Run full on_schedule script in debug mode."""
 
-    def __init__(self, *args, **kwargs):
-        """Initialize."""
-        super(DebugCase, self).__init__(*args, **kwargs)
-        pass
-
-    def setUp(self):
+    @classmethod
+    def setUpTestData(cls):
         """Set up for testing."""
+        from pytz import timezone
         from on_schedule import main
-        self.subreddits = SubRedditFactory.create_random_batch()
-        self.subscriber = SubscriberFactory.create(email=EMAIL)
-        self.subscriber.subreddits.add(*self.subreddits)
-        self.result = main(True)
+        from datetime import datetime
+        now = datetime.now(tz=timezone('US/Pacific'))
+        cls.subreddits = SubRedditFactory.create_random_batch()
+        cls.subscribers = SubscriberFactory.create_batch(
+            BATCH_SIZE,
+            send_hour=now.hour,
+        )
+        for s in cls.subscribers:
+            s.subreddits.add(*cls.subreddits)
+        cls.result = main(False)
+        cls.emails = mail.outbox
+        cls.email_bodies = [email.alternatives[0][0] for email in cls.emails]
 
     def test_main(self):
         """Test the main() function of on_schedule.py in debug mode."""
-        self.result = self.assertEqual(self.result, 1)
+        self.assertEqual(self.result, BATCH_SIZE)
 
     def test_outbox(self):
         """Test sending an email."""
-        self.assertEqual(len(mail.outbox), 1)
+        self.assertEqual(len(self.emails), BATCH_SIZE)
 
-    def test_recipient(self):
+    @parameterized.expand(BATCH_PARAMS)
+    def test_recipient(self, idx):
         """Test sending an email."""
-        email = mail.outbox[0]
-        self.assertEqual(self.subscriber.email, email.to[0])
+        email = self.emails[idx]
+        subscriber = self.subscribers[idx]
+        self.assertEqual(subscriber.email, email.to[0])
 
-    def test_unsubscribe_link(self):
+    @parameterized.expand(BATCH_PARAMS)
+    def test_unsubscribe_link(self, idx):
         """Check that unsubscribe link is in outgoing email."""
-        email = mail.outbox[0]
+        email_body = self.email_bodies[idx]
+        subscriber = self.subscribers[idx]
         unsub_url = reverse(
             'unsubscribe',
-            args=(self.subscriber.unsubscribe_hash, )
+            kwargs={'slug': subscriber.unsubscribe_hash}
         )
-        self.assertIn(unsub_url, email.alternatives[0][0])
+        self.assertIn(unsub_url, email_body)
+
+    def test_email_are_same(self):
+        """Ensure email content is uniform in emails except for unsub hash."""
+        unsub_pat = re.compile(r'/unsubscribe/[0-9a-f]+/')
+        bodies = map(
+            lambda e: UNICODE(re.sub(unsub_pat, '', e, )),
+            self.email_bodies
+        )
+        self.assertEqual(len(set(bodies)), 1)
