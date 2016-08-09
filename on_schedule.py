@@ -6,26 +6,17 @@ This program requests the top links from various subreddits of cute animals
 and email them to participants.
 """
 from __future__ import unicode_literals, absolute_import
-# try:
-#     from html import escape
-#     print('Python 3: using html.escape()')
-# except ImportError:
-#     from cgi import escape
-#     print('Python 2: using cgi.escape()')
 
 import re
 import sys
 import praw
 import django
-import smtplib
 import calendar
 import requests
 from pytz import timezone
 from bs4 import BeautifulSoup
 from operator import attrgetter
 from datetime import date, datetime
-# from email.mime.text import MIMEText
-# from email.mime.multipart import MIMEMultipart
 from constants import LIMIT, EMAIL
 from django.conf import settings
 from django.core.mail import send_mail
@@ -47,8 +38,7 @@ def main(debug):
     """Gather then email top cute links."""
     subscribers = subscribers_for_now(debug)
     if not subscribers:
-        now = datetime.now(tz=timezone('US/Pacific'))
-        print('No subscribers want cute delivered at {}'.format(now.hour))
+        print('0 subscribers want cute delivered at {}'.format(get_now_hour()))
         return 0
 
     subject = get_email_subject(debug)
@@ -73,18 +63,22 @@ def main(debug):
                 posts_to_send.extend(posts)
 
         body = get_email_body(subscriber, posts_to_send)
-        print('Sending email to {}...'.format(subscriber.email))
         sent_count += send_email(subject, subscriber, body)
         print('Email sent to {}...'.format(subscriber.email))
     return sent_count
+
+
+def get_now_hour():
+    """Return an integer of the current hour in Pacific Standard Time."""
+    now = datetime.now(tz=timezone('US/Pacific'))
+    return now.hour
 
 
 def subscribers_for_now(debug):
     """Collect subscribers with send_hour set to current time."""
     if debug:
         return Subscriber.objects.filter(email=EMAIL)
-    now = datetime.now(tz=timezone('US/Pacific'))
-    return Subscriber.objects.filter(send_hour=now.hour)
+    return Subscriber.objects.filter(send_hour=get_now_hour())
 
 
 def get_posts_from_reddit(reddit, subreddit_name, limit):
@@ -201,17 +195,9 @@ def get_email_subject(debug):
         date=today_date_str)
 
 
-def setup_email_server(email, password):
-    """Send an email using gmail's smtp server."""
-    server = smtplib.SMTP('smtp.gmail.com', 587)
-    server.ehlo()
-    server.starttls()
-    server.login(email, password)
-    return server
-
-
 def send_email(subject, subscriber, body):
     """Return number of emails sent using django mail with project specs."""
+    print('Sending email to {}...'.format(subscriber.email))
     return send_mail(
         subject,
         TXT_CONTENT,
@@ -220,17 +206,6 @@ def send_email(subject, subscriber, body):
         html_message=body,
         fail_silently=False,
     )
-
-# def send_email(server, from_addr, from_name, to_addr, subject, body):
-#     """Send an email with given server and message info."""
-#     html = MIMEText(body, 'html')
-#     msg = MIMEMultipart('alternative')
-#     msg.attach(html)
-#     msg['Subject'] = subject
-#     msg['From'] = from_name
-#     msg['To'] = to_addr
-#     server.sendmail(from_addr, to_addr, msg.as_string())
-#     print('Email send to {}'.format(to_addr))
 
 
 if __name__ == '__main__':
