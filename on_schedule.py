@@ -34,7 +34,7 @@ YT_PAT = re.compile(r'.*(youtu\.be|youtube\.com).*')
 SRC_PAT = re.compile(r'http(s)?://i\.(imgur|reddituploads|redd).*\.[a-z]{3,4}')
 
 
-def main(debug):
+def main(debug=False):
     """Gather then email top cute links."""
     subscribers = subscribers_for_now(debug)
     if not subscribers:
@@ -64,8 +64,10 @@ def main(debug):
         posts_to_send = sort_posts(posts_to_send)
         posts_to_send = htmlize_posts(posts_to_send)
         body = get_email_body(subscriber, posts_to_send)
+
         sent_count += send_email(subject, subscriber, body)
         print('Email sent to {}...'.format(subscriber.email))
+
     return sent_count
 
 
