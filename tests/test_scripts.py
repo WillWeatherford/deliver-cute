@@ -91,20 +91,20 @@ class EmailCase(TestCase):
 class RedditAPICase(TestCase):
     """Test retrieval of posts from reddit API."""
 
-    def setUp(self):
-        """Get post data to test."""
-        from on_schedule import create_post_map
-        # test with different limits
-        self.no_posts = create_post_map([], LIMIT)
-        self.all_posts = create_post_map(SUBREDDIT_NAMES, LIMIT)
+    # def setUp(self):
+    #     """Get post data to test."""
+    #     from on_schedule import create_post_map
+    #     # test with different limits
+    #     self.no_posts = create_post_map([], LIMIT)
+    #     self.all_posts = create_post_map(SUBREDDIT_NAMES, LIMIT)
 
-    def test_no_subreddits(self):
-        """Confirm that zero subreddits returns an empty dictionary."""
-        self.assertEqual(self.no_posts, {})
+    # def test_no_subreddits(self):
+    #     """Confirm that zero subreddits returns an empty dictionary."""
+    #     self.assertEqual(self.no_posts, {})
 
-    def test_dictionary(self):
-        """Confirm that given subreddits returns a dictionary."""
-        self.assertIsInstance(self.all_posts, dict)
+    # def test_dictionary(self):
+    #     """Confirm that given subreddits returns a dictionary."""
+    #     self.assertIsInstance(self.all_posts, dict)
 
     # @parameterized.expand(SUBR_NAME_PARAMS)
     # def test_cute_posts(self, name):
@@ -121,16 +121,16 @@ class RedditAPICase(TestCase):
 class FakePostsCase(TestCase):
     """Using fake posts to test unicode and html escaping."""
 
-    def __init__(self, *args, **kwargs):
+    @classmethod
+    def setUpTestData(cls):
         """Initialize data groups."""
-        super(FakePostsCase, self).__init__(*args, **kwargs)
         from on_schedule import htmlize_posts
-        self.fake_posts = FakePost.create_batch(BATCH_SIZE)
-        self.fake_post_attrs = list(chain(
+        cls.fake_posts = FakePost.create_batch(BATCH_SIZE)
+        cls.fake_post_attrs = list(chain(
             *((p.title, p.url, p.permalink, p.subreddit.display_name)
-              for p in self.fake_posts)))
-        self.htmlized_posts = list(htmlize_posts(self.fake_posts))
-        self.duplicates = FakePost.create_batch_with_dupes(BATCH_SIZE)
+              for p in cls.fake_posts)))
+        cls.htmlized_posts = list(htmlize_posts(cls.fake_posts))
+        cls.duplicates = FakePost.create_batch_with_dupes(BATCH_SIZE)
 
     def setUp(self):
         """Set up fake_posts."""
