@@ -72,11 +72,9 @@ class EmailCase(TestCase):
 
     def setUp(self):
         """Send an email."""
-        mail.send_mail(
-            SUBJECT, TEXT, EMAIL, [EMAIL],
-            html_message=BODY,
-            fail_silently=False,
-        )
+        from on_schedule import send_email
+        self.subscriber = SubscriberFactory.create(email=EMAIL)
+        send_email(SUBJECT, self.subscriber, BODY)
 
     def test_outbox(self):
         """Test sending an email."""
