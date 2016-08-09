@@ -34,7 +34,7 @@ django.setup()
 from subscribers.models import Subscriber
 
 USER_AGENT = 'python:deliver_cute:v1.0 (by /u/____OOOO____)'
-
+TXT_CONTENT = 'Plain text message.'
 EMAIL_SUBJECT_TEMPLATE = '{debug}Cute Pics for {date}'
 FROM_NAME = 'Deliver Cute'
 PIC_WIDTH = '400'
@@ -74,11 +74,7 @@ def main(debug):
 
         body = get_email_body(subscriber, posts_to_send)
         print('Sending email to {}...'.format(subscriber.email))
-        sent_count += send_mail(
-            subject, 'DEBUG', EMAIL, [subscriber.email],
-            html_message=body,
-            fail_silently=False,
-        )
+        sent_count += send_email(subject, subscriber, body)
         print('Email sent to {}...'.format(subscriber.email))
     return sent_count
 
@@ -213,6 +209,17 @@ def setup_email_server(email, password):
     server.login(email, password)
     return server
 
+
+def send_email(subject, subscriber, body):
+    """Return number of emails sent using django mail with project specs."""
+    return send_mail(
+        subject,
+        TXT_CONTENT,
+        EMAIL,
+        [subscriber.email],
+        html_message=body,
+        fail_silently=False,
+    )
 
 # def send_email(server, from_addr, from_name, to_addr, subject, body):
 #     """Send an email with given server and message info."""

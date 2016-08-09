@@ -1,6 +1,7 @@
 """Test functions for deliver_cute project."""
 from __future__ import unicode_literals, absolute_import
 
+import re
 import random
 from string import ascii_letters, digits
 from itertools import product, chain
@@ -270,6 +271,7 @@ class ManyEmailsCase(TestCase):
             s.subreddits.add(*cls.subreddits)
         cls.result = main(False)
         cls.emails = mail.outbox
+        cls.email_bodies = [email.alternatives[0][0] for email in cls.emails]
 
     def test_main(self):
         """Test the main() function of on_schedule.py in debug mode."""
@@ -289,10 +291,19 @@ class ManyEmailsCase(TestCase):
     @parameterized.expand(BATCH_PARAMS)
     def test_unsubscribe_link(self, idx):
         """Check that unsubscribe link is in outgoing email."""
-        email = self.emails[idx]
+        email_body = self.email_bodies[idx]
         subscriber = self.subscribers[idx]
         unsub_url = reverse(
             'unsubscribe',
             kwargs={'slug': subscriber.unsubscribe_hash}
         )
-        self.assertIn(unsub_url, email.alternatives[0][0])
+        self.assertIn(unsub_url, email_body)
+
+    def test_email_are_same(self):
+        """Ensure email content is uniform in emails except for unsub hash."""
+        unsub_pat = re.compile(r'/unsubscribe/[0-9a-f]+/')
+        bodies = map(
+            lambda e: UNICODE(re.sub(unsub_pat, '', e, )),
+            self.email_bodies
+        )
+        self.assertEqual(len(set(bodies)), 1)
