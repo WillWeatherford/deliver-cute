@@ -27,10 +27,10 @@ from tests.classes import (
 # TODO
 # test unicode status of incoming PRAW post objects
 # test escaped HTML of outgoing html
-#   test fix_urls
-#       make some bad urls
-#   test sort_urls
-#   test subscribers_for_now
+# test fix_urls
+#   make some bad urls
+# test sort_urls
+# test subscribers_for_now
 
 # edge cases:
 #   unsorted
