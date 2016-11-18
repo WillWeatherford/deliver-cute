@@ -1,4 +1,9 @@
 # deliver-cute
-A web application which sends the top images and gifs of cute animals from reddit to subscribers.
+A web application whichnd gifs of cute animals from reddit to subscribers.
 
 Built on Django web application framework.
+
+
+k;ndslnkfdsn;ks;lmkds
+
+This repo suck!
