@@ -36,6 +36,22 @@ class Subscriber(md.Model):
         for subreddit in self.subreddits.all():
             yield subreddit.display_name
 
+    def log_subreddits_before_change(self, changed_subreddits, action):
+        current_subreddits = set(self.subreddits.all())
+        if action == 'pre_add':
+            after = current_subreddits | changed_subreddits
+        elif action == 'pre_remove':
+            after = current_subreddits - changed_subreddits
+        else:
+            return
+        print('Logging for {}'.format(self))
+        print('Before: \n\t{}'.format(
+            '\n\t'.join(sr.display_name for sr in current_subreddits)
+        ))
+        print('After: \n\t{}'.format(
+            '\n\t'.join(sr.display_name for sr in after)
+        ))
+
 
 class SubReddit(md.Model):
     """Subreddit chosen by Subscriber through Many-To-Many Relationship."""
